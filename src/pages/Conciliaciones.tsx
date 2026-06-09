@@ -63,20 +63,20 @@ export function Conciliaciones({ initialBranchId }: ConciliacionesProps) {
         </div>
       ) : (
         <div>
-          <div style={{ marginBottom: isMobile ? 'var(--space-5)' : 'var(--space-8)' }}>
+          <div style={{ marginBottom: isMobile ? 'var(--space-4)' : 'var(--space-6)' }}>
             <div style={{
               fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-bold)',
               letterSpacing: 'var(--tracking-widest)', textTransform: 'uppercase', color: 'var(--bran)',
               marginBottom: 'var(--space-2)',
             }}>8 de junio, 2026</div>
-            <h1 style={{ fontSize: isMobile ? 'var(--text-2xl)' : 'var(--text-4xl)' }}>Conciliaciones</h1>
+            <h1 style={{ fontSize: isMobile ? 'var(--text-xl)' : 'var(--text-2xl)' }}>Conciliaciones</h1>
           </div>
 
           <BranchFilter selected={selectedBranchId} onChange={(id) => { setSelectedBranchId(id); setSelectedRecId(null) }} isMobile={isMobile} />
 
           {isNarrow ? (
             /* Mobile/Tablet: lista única, toca para ver detalle */
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'var(--space-5)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'var(--space-4)' }}>
               {filteredRecs.map(rec => (
                 <RecCard key={rec.id} rec={rec} isSelected={false} onClick={() => handleSelectRec(rec.id)} />
               ))}
@@ -152,7 +152,7 @@ function RecCard({ rec, isSelected, onClick }: {
       onClick={onClick}
       style={{
         background: isSelected ? 'var(--babka-blue)' : 'var(--flour)',
-        borderRadius: 'var(--r-lg)', padding: 'var(--space-4) var(--space-6)',
+        borderRadius: 'var(--r-lg)', padding: 'var(--space-6)',
         cursor: 'pointer', boxShadow: 'var(--shadow-md)',
         transition: 'all var(--transition)',
         border: '2px solid', borderColor: isSelected ? 'var(--babka-blue)' : 'transparent',

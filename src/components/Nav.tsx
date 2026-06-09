@@ -7,6 +7,7 @@ interface NavProps {
   page: string
   onNavigate: (page: string) => void
   collapsed?: boolean
+  onToggleCollapse?: () => void
   role?: UserRole
   onRoleChange?: (r: UserRole) => void
 }
@@ -20,7 +21,7 @@ const NAV_ITEMS = [
   { id: 'chat',           label: 'Clarisa AI',     icon: '✦' },
 ]
 
-export function Nav({ page, onNavigate, collapsed = false, role = 'ops', onRoleChange }: NavProps) {
+export function Nav({ page, onNavigate, collapsed = false, onToggleCollapse, role = 'ops', onRoleChange }: NavProps) {
   const pendingHITL = HITL_REQUESTS.length
   const width = collapsed ? '64px' : '220px'
 
@@ -37,15 +38,15 @@ export function Nav({ page, onNavigate, collapsed = false, role = 'ops', onRoleC
       transition: 'width 0.3s var(--ease-out)',
       overflowX: 'hidden',
     }}>
-      {/* Wordmark / icon */}
+      {/* Wordmark / icon + collapse toggle */}
       <div style={{
         marginBottom: 'var(--space-6)',
         paddingBottom: 'var(--space-4)',
         borderBottom: '1px solid rgba(255,255,255,0.1)',
         display: 'flex',
-        flexDirection: collapsed ? 'row' : 'column',
-        alignItems: collapsed ? 'center' : 'flex-start',
-        justifyContent: collapsed ? 'center' : undefined,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: collapsed ? 'center' : 'space-between',
       }}>
         {collapsed ? (
           <div style={{
@@ -53,7 +54,7 @@ export function Nav({ page, onNavigate, collapsed = false, role = 'ops', onRoleC
             fontStyle: 'italic', fontSize: 'var(--text-lg)', color: 'var(--wheat)',
           }}>B</div>
         ) : (
-          <>
+          <div>
             <div style={{
               fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-black)',
               fontStyle: 'italic', fontSize: 'var(--text-xl)', color: 'var(--wheat)',
@@ -64,7 +65,33 @@ export function Nav({ page, onNavigate, collapsed = false, role = 'ops', onRoleC
               fontSize: '10px', letterSpacing: 'var(--tracking-widest)',
               textTransform: 'uppercase', color: 'var(--bran)', marginTop: '2px',
             }}>PAN DE HOY</div>
-          </>
+          </div>
+        )}
+        {onToggleCollapse && (
+          <button
+            onClick={onToggleCollapse}
+            title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: 'none', cursor: 'pointer',
+              borderRadius: 'var(--r-md)',
+              width: '24px', height: '24px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'rgba(255,255,255,0.45)',
+              fontSize: '12px', flexShrink: 0,
+              transition: 'background var(--transition), color var(--transition)',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.12)'
+              ;(e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.8)'
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)'
+              ;(e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.45)'
+            }}
+          >
+            {collapsed ? '›' : '‹'}
+          </button>
         )}
       </div>
 

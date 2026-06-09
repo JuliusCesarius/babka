@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Nav } from './Nav'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
@@ -15,6 +15,7 @@ interface LayoutProps {
 
 export function Layout({ page, onNavigate, children, role, onRoleChange }: LayoutProps) {
   const { isMobile, isTablet } = useBreakpoint()
+  const [navCollapsed, setNavCollapsed] = useState(false)
 
   if (isMobile) {
     return (
@@ -41,7 +42,7 @@ export function Layout({ page, onNavigate, children, role, onRoleChange }: Layou
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: role === 'exec' ? '#F5F4F0' : 'var(--flour-warm)' }}>
-      <Nav page={page} onNavigate={onNavigate} role={role} onRoleChange={onRoleChange} />
+      <Nav page={page} onNavigate={onNavigate} role={role} onRoleChange={onRoleChange} collapsed={navCollapsed} onToggleCollapse={() => setNavCollapsed(c => !c)} />
       <main style={{ flex: 1, padding: 'var(--space-8)', minWidth: 0 }}>
         <div style={{ maxWidth: role === 'exec' ? '1200px' : '1100px', margin: '0 auto' }}>
           {children}
