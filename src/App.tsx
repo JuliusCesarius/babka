@@ -23,7 +23,7 @@ export default function App() {
   return (
     <Layout page={page} onNavigate={navigate} role={role} onRoleChange={setRole}>
       {page === 'resumen'        && <Resumen onNavigate={navigate} role={role} />}
-      {page === 'conciliaciones' && <Conciliaciones initialBranchId={selectedBranchId} />}
+      {page === 'conciliaciones' && <Conciliaciones initialBranchId={selectedBranchId} onNavigate={navigate} />}
       {page === 'calendario'     && <Calendario />}
       {page === 'hitl'           && <HITL />}
       {page === 'whatsapp'       && <WhatsAppSim />}

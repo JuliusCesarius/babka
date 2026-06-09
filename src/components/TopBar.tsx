@@ -5,7 +5,7 @@ const PAGE_LABELS: Record<string, string> = {
   resumen:        'Resumen',
   conciliaciones: 'Conciliaciones',
   calendario:     'Calendario',
-  hitl:           'Bandeja HITL',
+  hitl:           'Revisión',
   whatsapp:       'WhatsApp',
   chat:           'Clarisa AI',
 }

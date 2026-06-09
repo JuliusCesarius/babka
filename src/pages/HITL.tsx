@@ -29,10 +29,10 @@ export function HITL() {
           letterSpacing: 'var(--tracking-widest)', textTransform: 'uppercase', color: 'var(--bran)',
           marginBottom: 'var(--space-2)',
         }}>
-          Bandeja de aprobaciones
+          Revisión · aprobaciones pendientes
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-          <h1 style={{ fontSize: isMobile ? 'var(--text-2xl)' : 'var(--text-4xl)' }}>HITL Queue</h1>
+          <h1 style={{ fontSize: isMobile ? 'var(--text-xl)' : 'var(--text-2xl)' }}>Revisión</h1>
           {requests.length > 0 && (
             <span style={{
               background: 'var(--babka-orange)', color: '#fff',

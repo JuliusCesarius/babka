@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { id: 'resumen',        label: 'Resumen',        icon: '◈' },
   { id: 'conciliaciones', label: 'Conciliaciones', icon: '⊞' },
   { id: 'calendario',     label: 'Calendario',     icon: '▦' },
-  { id: 'hitl',           label: 'Bandeja HITL',   icon: '⊡' },
+  { id: 'hitl',           label: 'Revisión',       icon: '⊡' },
   { id: 'whatsapp',       label: 'WhatsApp',       icon: '◎' },
   { id: 'chat',           label: 'Clarisa AI',     icon: '✦' },
 ]

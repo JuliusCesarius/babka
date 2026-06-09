@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { BRANCHES, RECONCILIATIONS, BRANCH_SUMMARIES } from '../fixtures/branches'
+import { BRANCHES, RECONCILIATIONS, BRANCH_SUMMARIES, HITL_REQUESTS } from '../fixtures/branches'
 import { getItemEvents } from '../fixtures/events'
 import { useBreakpoint } from '../hooks/useBreakpoint'
 import type { BranchId, Reconciliation, ReconciliationItem, ReconciliationDestino, ItemEvent } from '../types'
 
 interface ConciliacionesProps {
   initialBranchId?: BranchId
+  onNavigate?: (page: string) => void
 }
 
 const DESTINOS: Array<{ key: keyof ReconciliationItem; label: string }> = [
@@ -18,7 +19,7 @@ const DESTINOS: Array<{ key: keyof ReconciliationItem; label: string }> = [
   { key: 'devolucion', label: 'Dev.' },
 ]
 
-export function Conciliaciones({ initialBranchId }: ConciliacionesProps) {
+export function Conciliaciones({ initialBranchId, onNavigate }: ConciliacionesProps) {
   const { isMobile, isTablet } = useBreakpoint()
   const isNarrow = isMobile || isTablet
 
@@ -79,7 +80,7 @@ export function Conciliaciones({ initialBranchId }: ConciliacionesProps) {
             /* Mobile/Tablet: lista única, toca para ver detalle */
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', marginTop: 'var(--space-4)' }}>
               {filteredRecs.map(rec => (
-                <RecCard key={rec.id} rec={rec} isSelected={false} onClick={() => handleSelectRec(rec.id)} />
+                <RecCard key={rec.id} rec={rec} isSelected={false} onClick={() => handleSelectRec(rec.id)} onNavigate={onNavigate} />
               ))}
             </div>
           ) : (
@@ -87,7 +88,7 @@ export function Conciliaciones({ initialBranchId }: ConciliacionesProps) {
             <div style={{ display: 'grid', gridTemplateColumns: selectedRec ? '300px 1fr' : '1fr', gap: 'var(--space-6)', marginTop: 'var(--space-6)' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                 {filteredRecs.map(rec => (
-                  <RecCard key={rec.id} rec={rec} isSelected={selectedRecId === rec.id} onClick={() => handleSelectRec(rec.id)} />
+                  <RecCard key={rec.id} rec={rec} isSelected={selectedRecId === rec.id} onClick={() => handleSelectRec(rec.id)} onNavigate={onNavigate} />
                 ))}
               </div>
               {selectedRec && <RecDetail rec={selectedRec} isMobile={false} />}
@@ -135,30 +136,40 @@ function BranchFilter({ selected, onChange, isMobile }: {
   )
 }
 
-function RecCard({ rec, isSelected, onClick }: {
-  rec: Reconciliation; isSelected: boolean; onClick: () => void
+function RecCard({ rec, isSelected, onClick, onNavigate }: {
+  rec: Reconciliation; isSelected: boolean; onClick: () => void; onNavigate?: (page: string) => void
 }) {
-  const branch  = BRANCHES.find(b => b.id === rec.branchId)!
-  const summary = BRANCH_SUMMARIES.find(s => s.branchId === rec.branchId)!
+  const branch   = BRANCHES.find(b => b.id === rec.branchId)!
+  const summary  = BRANCH_SUMMARIES.find(s => s.branchId === rec.branchId)!
+  const hitlItem = HITL_REQUESTS.find(r => r.branchId === rec.branchId && r.reconciliationId === rec.id)
+    ?? HITL_REQUESTS.find(r => r.branchId === rec.branchId)
+
+  const isAlert = rec.status === 'descuadre' || rec.status === 'pendiente'
+
   const statusColor: Record<Reconciliation['status'], string> = {
     cerrado: '#22C55E', abierto: 'var(--babka-blue)',
     descuadre: 'var(--wheat-deep)', pendiente: 'var(--babka-orange)',
   }
   const statusLabel: Record<Reconciliation['status'], string> = {
-    cerrado: 'Cerrado', abierto: 'Abierto', descuadre: 'Descuadre', pendiente: 'Pendiente',
+    cerrado: 'Cerrado', abierto: 'Abierto', descuadre: 'Descuadre', pendiente: 'Sin reportar',
   }
+
+  const alertBorderColor = rec.status === 'descuadre' ? 'rgba(230,178,60,0.5)' : 'rgba(220,122,51,0.4)'
+  const alertBg          = rec.status === 'descuadre' ? 'rgba(230,178,60,0.04)' : 'rgba(220,122,51,0.04)'
 
   return (
     <div
       onClick={onClick}
       style={{
-        background: isSelected ? 'var(--babka-blue)' : 'var(--flour)',
+        background: isSelected ? 'var(--babka-blue)' : isAlert ? alertBg : 'var(--flour)',
         borderRadius: 'var(--r-lg)', padding: 'var(--space-6)',
         cursor: 'pointer', boxShadow: 'var(--shadow-md)',
         transition: 'all var(--transition)',
-        border: '2px solid', borderColor: isSelected ? 'var(--babka-blue)' : 'transparent',
+        border: '2px solid',
+        borderColor: isSelected ? 'var(--babka-blue)' : isAlert ? alertBorderColor : 'transparent',
       }}
     >
+      {/* Top row: name + badge */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-2)' }}>
         <div>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-black)', fontSize: 'var(--text-lg)', color: isSelected ? '#fff' : 'var(--ink)' }}>
@@ -178,7 +189,9 @@ function RecCard({ rec, isSelected, onClick }: {
           {statusLabel[rec.status]}
         </span>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+
+      {/* Units + delta */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isAlert ? 'var(--space-3)' : 0 }}>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: isSelected ? 'rgba(255,255,255,0.85)' : 'var(--ink-soft)' }}>
           {summary.totalUnits} unidades
         </span>
@@ -188,6 +201,72 @@ function RecCard({ rec, isSelected, onClick }: {
           </span>
         )}
       </div>
+
+      {/* Agent inference block — only for descuadre / pendiente */}
+      {isAlert && !isSelected && (
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{
+            borderTop: `1px solid ${alertBorderColor}`,
+            paddingTop: 'var(--space-3)',
+            display: 'flex', flexDirection: 'column', gap: 'var(--space-2)',
+          }}
+        >
+          {/* Agent message */}
+          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '11px', color: 'var(--bran)', flexShrink: 0, marginTop: '1px' }}>✦</span>
+            <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--ink-soft)', lineHeight: 1.5 }}>
+              {hitlItem?.agentMessage ?? (
+                rec.status === 'pendiente'
+                  ? 'Sin actividad registrada desde apertura. El gerente no ha iniciado el proceso de cierre.'
+                  : 'Hay unidades no contabilizadas en esta conciliación.'
+              )}
+            </p>
+          </div>
+
+          {/* Suggested action */}
+          {hitlItem?.suggestedAction && (
+            <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+              <span style={{ fontSize: '10px', color: 'var(--bran)', flexShrink: 0 }}>→</span>
+              <span style={{ fontSize: '11px', color: statusColor[rec.status], fontWeight: 'var(--weight-medium)' }}>
+                {hitlItem.suggestedAction}
+              </span>
+            </div>
+          )}
+
+          {/* CTA */}
+          {onNavigate && (
+            <button
+              onClick={e => { e.stopPropagation(); onNavigate('hitl') }}
+              style={{
+                alignSelf: 'flex-start',
+                marginTop: '2px',
+                padding: '5px 14px',
+                borderRadius: 'var(--r-pill)',
+                border: `1.5px solid ${statusColor[rec.status]}`,
+                background: 'transparent',
+                color: statusColor[rec.status],
+                fontFamily: 'var(--font-body)',
+                fontSize: '11px', fontWeight: 'var(--weight-bold)',
+                cursor: 'pointer',
+                transition: 'all var(--transition)',
+              }}
+              onMouseEnter={e => {
+                const btn = e.currentTarget
+                btn.style.background = statusColor[rec.status]
+                btn.style.color = '#fff'
+              }}
+              onMouseLeave={e => {
+                const btn = e.currentTarget
+                btn.style.background = 'transparent'
+                btn.style.color = statusColor[rec.status]
+              }}
+            >
+              Acción requerida →
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
