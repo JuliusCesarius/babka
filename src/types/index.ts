@@ -90,6 +90,15 @@ export type HITLType =
 
 export type HITLPriority = 'alta' | 'media' | 'baja'
 
+export type HITLTimelineActor = 'sistema' | 'agente' | 'gerente' | 'pos'
+
+export interface HITLTimelineEvent {
+  time: string       // ISO datetime
+  actor: HITLTimelineActor
+  event: string
+  detail?: string
+}
+
 export interface HITLRequest {
   id: string
   type: HITLType
@@ -101,6 +110,8 @@ export interface HITLRequest {
   agentMessage?: string
   suggestedAction?: string
   reconciliationId?: string
+  timeline?: HITLTimelineEvent[]
+  agentHypothesis?: string
 }
 
 export type WhatsAppRole = 'user' | 'agent' | 'system'
