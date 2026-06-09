@@ -281,44 +281,36 @@ function BranchMiniCard({ shortName, units, light, isSelected, alertStatus, onCl
     <button
       onClick={onClick}
       style={{
-        flexShrink: 0, minWidth: '94px',
-        display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '5px',
-        padding: '10px 12px',
-        borderRadius: 'var(--r-lg)', border: '2px solid',
-        borderColor: isSelected ? 'var(--babka-blue)' : 'transparent',
+        flexShrink: 0,
+        display: 'flex', alignItems: 'center', gap: '7px',
+        padding: '6px 10px',
+        borderRadius: 'var(--r-pill)', border: '1.5px solid',
+        borderColor: isSelected ? 'var(--babka-blue)' : 'var(--line)',
         background: isSelected ? 'var(--babka-blue)' : 'var(--flour)',
-        cursor: 'pointer', boxShadow: 'var(--shadow-sm)',
+        cursor: 'pointer',
         transition: 'all var(--transition)', textAlign: 'left',
-        position: 'relative',
+        position: 'relative', whiteSpace: 'nowrap',
       }}
     >
-      {/* Alert dot */}
+      <div style={{
+        width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0,
+        background: isSelected ? 'rgba(255,255,255,0.7)' : STATUS_LIGHT[light] ?? '#ccc',
+      }} />
+      <span style={{
+        fontFamily: 'var(--font-body)', fontWeight: 'var(--weight-bold)',
+        fontSize: 'var(--text-xs)', color: isSelected ? '#fff' : 'var(--ink)',
+      }}>{shortName}</span>
+      <span style={{
+        fontFamily: 'var(--font-mono)', fontSize: '10px',
+        color: isSelected ? 'rgba(255,255,255,0.7)' : 'var(--bran)',
+      }}>{units}u</span>
       {alertStatus && (
         <div style={{
-          position: 'absolute', top: '7px', right: '7px',
-          width: '7px', height: '7px', borderRadius: '50%',
-          background: alertColor,
-          boxShadow: `0 0 0 2px ${isSelected ? 'var(--babka-blue)' : 'var(--flour)'}`,
+          position: 'absolute', top: '-3px', right: '-3px',
+          width: '8px', height: '8px', borderRadius: '50%',
+          background: alertColor, boxShadow: `0 0 0 1.5px var(--flour)`,
         }} />
       )}
-      <div style={{
-        fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-black)',
-        fontSize: 'var(--text-sm)', color: isSelected ? '#fff' : 'var(--ink)', lineHeight: 1,
-      }}>
-        {shortName}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-        <div style={{
-          width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0,
-          background: isSelected ? 'rgba(255,255,255,0.65)' : STATUS_LIGHT[light] ?? '#ccc',
-        }} />
-        <span style={{
-          fontFamily: 'var(--font-mono)', fontSize: '11px', whiteSpace: 'nowrap',
-          color: isSelected ? 'rgba(255,255,255,0.75)' : 'var(--bran)',
-        }}>
-          {units} u
-        </span>
-      </div>
     </button>
   )
 }
