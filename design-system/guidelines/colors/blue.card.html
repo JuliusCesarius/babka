@@ -1,0 +1,37 @@
+<!-- @dsCard group="Colors" viewport="700x160" name="Azul cobalt" subtitle="Firma y acento — 10% del layout" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { background: var(--flour-warm); padding: 20px; font-family: var(--font-body); }
+  .row { display: flex; gap: 8px; }
+  .swatch { flex: 1; border-radius: var(--r-md); padding: 16px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .swatch-name { font-weight: var(--weight-medium); font-size: var(--text-sm); }
+  .swatch-var  { font-family: var(--font-mono); font-size: 10px; opacity: 0.7; }
+  .swatch-hex  { font-family: var(--font-mono); font-size: 11px; }
+  .dark { color: #fff; }
+  .light { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="swatch dark" style="background:var(--babka-blue); flex:2;">
+    <span class="swatch-name">Blue</span>
+    <span class="swatch-var">--babka-blue</span>
+    <span class="swatch-hex">#1F5AD9</span>
+  </div>
+  <div class="swatch dark" style="background:var(--babka-blue-deep);">
+    <span class="swatch-name">Deep</span>
+    <span class="swatch-var">--babka-blue-deep</span>
+    <span class="swatch-hex">#143F9E</span>
+  </div>
+  <div class="swatch light" style="background:var(--babka-blue-soft); border:1px solid var(--line);">
+    <span class="swatch-name">Soft</span>
+    <span class="swatch-var">--babka-blue-soft</span>
+    <span class="swatch-hex">#D5E2FB</span>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!-- @dsCard group="Brand" viewport="700x180" name="Wordmark & Logotipo" subtitle="Fraunces 900 italic en azul cobalt" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { background: var(--flour); padding: 24px; font-family: var(--font-body); }
+  .row { display: flex; gap: 0; align-items: stretch; }
+  .cell { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px 16px; }
+  .cell + .cell { border-left: 1px solid var(--line); }
+  .label { font-family: var(--font-mono); font-size: 10px; color: var(--bran); }
+  .dark { background: var(--ink); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="cell" style="background:var(--flour);">
+      <span style="font-family:var(--font-display); font-weight:900; font-style:italic; font-size:52px; color:var(--babka-blue); letter-spacing:-1px; line-height:1;">BABKA</span>
+      <span class="label">Sobre blanco</span>
+    </div>
+    <div class="cell" style="background:var(--crumb);">
+      <span style="font-family:var(--font-display); font-weight:900; font-style:italic; font-size:52px; color:var(--babka-blue); letter-spacing:-1px; line-height:1;">BABKA</span>
+      <span class="label">Sobre crumb</span>
+    </div>
+    <div class="cell" style="background:var(--ink);">
+      <span style="font-family:var(--font-display); font-weight:900; font-style:italic; font-size:52px; color:var(--babka-blue); letter-spacing:-1px; line-height:1;">BABKA</span>
+      <span class="label" style="color:var(--bran);">Sobre tinta</span>
+    </div>
+    <div class="cell" style="background:var(--babka-blue);">
+      <span style="font-family:var(--font-display); font-weight:900; font-style:italic; font-size:52px; color:#fff; letter-spacing:-1px; line-height:1;">BABKA</span>
+      <span class="label" style="color:rgba(255,255,255,0.6);">Sobre azul</span>
+    </div>
+  </div>
+</body>
+</html>

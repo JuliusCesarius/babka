@@ -1,0 +1,23 @@
+<!-- @dsCard group="Spacing" viewport="700x140" name="Sombras cálidas" subtitle="4 elevaciones — warm-tinted, nunca frías" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { background: var(--crumb); padding: 24px 20px; font-family: var(--font-body); }
+  .row { display: flex; gap: 20px; align-items: center; }
+  .swatch { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .box { width: 80px; height: 56px; background: var(--flour); border-radius: var(--r-md); }
+  .label { font-family: var(--font-mono); font-size: 10px; color: var(--bran); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="swatch"><div class="box" style="box-shadow:var(--shadow-sm);"></div><span class="label">--shadow-sm</span></div>
+    <div class="swatch"><div class="box" style="box-shadow:var(--shadow-md);"></div><span class="label">--shadow-md</span></div>
+    <div class="swatch"><div class="box" style="box-shadow:var(--shadow-lg);"></div><span class="label">--shadow-lg</span></div>
+    <div class="swatch"><div class="box" style="box-shadow:var(--shadow-xl);"></div><span class="label">--shadow-xl</span></div>
+  </div>
+</body>
+</html>

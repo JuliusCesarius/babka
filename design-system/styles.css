@@ -1,0 +1,7 @@
+/* ─── BABKA DESIGN SYSTEM — Global CSS Entry Point ───────────────────────── */
+/* Import order matters: tokens first, then base styles                        */
+
+@import './tokens/colors.css';
+@import './tokens/typography.css';
+@import './tokens/spacing.css';
+@import './tokens/base.css';

@@ -1,0 +1,47 @@
+/* ─── BABKA COLOR TOKENS ───────────────────────────────────────────────────── */
+:root {
+  /* Azul cobalt — firma y acento (10%) */
+  --babka-blue:       #1F5AD9;
+  --babka-blue-deep:  #143F9E;
+  --babka-blue-soft:  #D5E2FB;
+
+  /* Amarillo trigo — primario / CTAs (20%) */
+  --wheat:            #E6B23C;
+  --wheat-deep:       #C9912A;
+  --wheat-light:      #F6E5A9;
+
+  /* Naranja — chispa puntual, nunca base */
+  --babka-orange:     #DC7A33;
+  --babka-orange-deep:#BC5F1F;
+
+  /* Neutros de pan — fondos y estructura (60%) */
+  --flour:            #FFFFFF;
+  --flour-warm:       #FCFAF4;
+  --crumb:            #F4EEE1;
+  --crust:            #9C6B3F;
+  --toast:            #6E4A2E;
+  --bran:             #8A7E6B;
+  --line:             #E8E0CF;
+
+  /* Tinta — estructura / nav / texto (10%) */
+  --ink:              #1A1714;
+  --ink-soft:         #3A352E;
+
+  /* ── Aliases semánticos ──────────────────────────────────────────────── */
+  --color-primary:          var(--wheat);
+  --color-primary-hover:    var(--wheat-deep);
+  --color-secondary:        var(--babka-blue);
+  --color-secondary-hover:  var(--babka-blue-deep);
+  --color-accent:           var(--babka-orange);
+
+  --color-bg:               var(--flour);
+  --color-bg-warm:          var(--flour-warm);
+  --color-bg-subtle:        var(--crumb);
+  --color-border:           var(--line);
+
+  --color-text:             var(--ink);
+  --color-text-soft:        var(--ink-soft);
+  --color-text-muted:       var(--bran);
+
+  --color-focus-ring:       var(--babka-blue);
+}

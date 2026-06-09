@@ -1,0 +1,100 @@
+/* ─── BABKA BASE / RESET ──────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  color: var(--ink);
+  background-color: var(--flour-warm);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-wrap: pretty;
+}
+
+/* ── Headings ─────────────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+}
+
+h1 { font-size: var(--text-4xl); font-weight: var(--weight-black); }
+h2 { font-size: var(--text-3xl); font-weight: var(--weight-black); }
+h3 { font-size: var(--text-2xl); font-weight: var(--weight-semibold); }
+h4 { font-size: var(--text-xl);  font-weight: var(--weight-semibold); }
+h5 { font-size: var(--text-lg);  font-weight: var(--weight-medium); }
+h6 { font-size: var(--text-base);font-weight: var(--weight-medium); }
+
+/* ── Body copy ────────────────────────────────────────────────────────────── */
+p {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--ink-soft);
+}
+
+/* ── Links ────────────────────────────────────────────────────────────────── */
+a {
+  color: var(--babka-blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--transition);
+}
+a:hover { color: var(--babka-blue-deep); }
+
+/* ── Focus ring — siempre azul, nunca amarillo ────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--babka-blue);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
+}
+
+/* ── Utility: Pan de Hoy lockup ───────────────────────────────────────────── */
+.lockup {
+  font-family: var(--lockup-font);
+  font-weight: var(--lockup-weight);
+  letter-spacing: var(--lockup-tracking);
+  text-transform: var(--lockup-transform);
+  font-size: var(--text-xs);
+}
+
+/* ── Utility: wordmark ────────────────────────────────────────────────────── */
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: var(--weight-black);
+  font-style: italic;
+  letter-spacing: var(--tracking-tight);
+}
+
+/* ── Dividers ─────────────────────────────────────────────────────────────── */
+hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: var(--space-8) 0;
+}
+
+/* ── Code / mono ──────────────────────────────────────────────────────────── */
+code, pre, kbd {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+/* ── Images ───────────────────────────────────────────────────────────────── */
+img, svg { display: block; max-width: 100%; }
+
+/* ── Lists ────────────────────────────────────────────────────────────────── */
+ul, ol { padding-left: var(--space-6); }
+li { line-height: var(--leading-relaxed); }

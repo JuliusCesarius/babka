@@ -1,0 +1,30 @@
+<!-- @dsCard group="Colors" viewport="700x140" name="Proporción 60/20/10/10" subtitle="Regla de proporción no negociable" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { background: var(--flour-warm); padding: 20px 20px 16px; font-family: var(--font-body); }
+  .bar { display: flex; border-radius: var(--r-pill); overflow: hidden; height: 40px; }
+  .seg { display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: var(--weight-bold); transition: flex var(--transition); }
+  .labels { display: flex; margin-top: 10px; gap: 16px; flex-wrap: wrap; }
+  .label { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink-soft); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="seg" style="flex:60; background:var(--crumb); color:var(--bran);">60%</div>
+  <div class="seg" style="flex:20; background:var(--wheat); color:var(--ink);">20%</div>
+  <div class="seg" style="flex:10; background:var(--babka-blue); color:#fff;">10%</div>
+  <div class="seg" style="flex:10; background:var(--ink); color:#fff;">10%</div>
+</div>
+<div class="labels">
+  <div class="label"><div class="dot" style="background:var(--crumb); border:1px solid var(--line);"></div>Blanco / Fondo 60%</div>
+  <div class="label"><div class="dot" style="background:var(--wheat);"></div>Amarillo trigo — Primario 20%</div>
+  <div class="label"><div class="dot" style="background:var(--babka-blue);"></div>Azul cobalt — Firma 10%</div>
+  <div class="label"><div class="dot" style="background:var(--ink);"></div>Tinta — Estructura 10%</div>
+</div>
+</body>
+</html>

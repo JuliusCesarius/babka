@@ -1,0 +1,33 @@
+<!-- @dsCard group="Colors" viewport="700x160" name="Naranja chispa" subtitle="Acento puntual — nunca fondo ni texto base" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { background: var(--flour-warm); padding: 20px; font-family: var(--font-body); }
+  .row { display: flex; gap: 8px; }
+  .swatch { flex: 1; border-radius: var(--r-md); padding: 16px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .swatch-name { font-weight: var(--weight-medium); font-size: var(--text-sm); }
+  .swatch-var  { font-family: var(--font-mono); font-size: 10px; opacity: 0.75; }
+  .swatch-hex  { font-family: var(--font-mono); font-size: 11px; }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="swatch" style="background:var(--babka-orange); color:var(--ink); flex:2;">
+    <span class="swatch-name">Orange</span>
+    <span class="swatch-var">--babka-orange</span>
+    <span class="swatch-hex">#DC7A33</span>
+  </div>
+  <div class="swatch" style="background:var(--babka-orange-deep); color:var(--ink);">
+    <span class="swatch-name">Deep</span>
+    <span class="swatch-var">--babka-orange-deep</span>
+    <span class="swatch-hex">#BC5F1F</span>
+  </div>
+  <div class="swatch" style="background:var(--flour); border:1px solid var(--line); flex:1.5; display:flex; align-items:center; justify-content:center; border-radius:var(--r-md);">
+    <span style="font-size:11px; color:var(--bran); text-align:center; padding:8px;">Chispa puntual.<br>Nunca base.</span>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!-- @dsCard group="Type" viewport="700x140" name="Escala tipográfica" subtitle="Tamaños de --text-xs a --text-hero" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { background: var(--flour); padding: 20px; font-family: var(--font-body); }
+  .scale { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .label { font-family: var(--font-mono); font-size: 9px; color: var(--bran); white-space: nowrap; }
+</style>
+</head>
+<body>
+  <div class="scale">
+    <div class="step"><span style="font-size:var(--text-xs);">Aa</span><span class="label">xs·12</span></div>
+    <div class="step"><span style="font-size:var(--text-sm);">Aa</span><span class="label">sm·14</span></div>
+    <div class="step"><span style="font-size:var(--text-base);">Aa</span><span class="label">base·16</span></div>
+    <div class="step"><span style="font-size:var(--text-md);">Aa</span><span class="label">md·18</span></div>
+    <div class="step"><span style="font-size:var(--text-lg);">Aa</span><span class="label">lg·20</span></div>
+    <div class="step"><span style="font-size:var(--text-xl);">Aa</span><span class="label">xl·24</span></div>
+    <div class="step"><span style="font-size:var(--text-2xl); font-family:var(--font-display); font-weight:900;">Aa</span><span class="label">2xl·32</span></div>
+    <div class="step"><span style="font-size:var(--text-3xl); font-family:var(--font-display); font-weight:900;">Aa</span><span class="label">3xl·40</span></div>
+    <div class="step"><span style="font-size:var(--text-4xl); font-family:var(--font-display); font-weight:900; line-height:1;">Aa</span><span class="label">4xl·56</span></div>
+  </div>
+</body>
+</html>

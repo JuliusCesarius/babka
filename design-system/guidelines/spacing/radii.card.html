@@ -1,0 +1,24 @@
+<!-- @dsCard group="Spacing" viewport="700x140" name="Radios de borde" subtitle="--r-sm a --r-pill — esquinas siempre redondeadas" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { background: var(--flour); padding: 24px 20px; font-family: var(--font-body); }
+  .row { display: flex; gap: 20px; align-items: center; }
+  .swatch { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .box { width: 72px; height: 72px; background: var(--babka-blue-soft); border: 2px solid var(--babka-blue); }
+  .label { font-family: var(--font-mono); font-size: 10px; color: var(--bran); text-align: center; }
+  .val   { font-family: var(--font-mono); font-size: 11px; color: var(--ink); text-align: center; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="swatch"><div class="box" style="border-radius:var(--r-sm);"></div><span class="val">10px</span><span class="label">--r-sm</span></div>
+    <div class="swatch"><div class="box" style="border-radius:var(--r-md);"></div><span class="val">18px</span><span class="label">--r-md</span></div>
+    <div class="swatch"><div class="box" style="border-radius:var(--r-lg);"></div><span class="val">28px</span><span class="label">--r-lg</span></div>
+    <div class="swatch"><div class="box" style="border-radius:var(--r-pill); width:120px; height:40px;"></div><span class="val">999px</span><span class="label">--r-pill</span></div>
+  </div>
+</body>
+</html>
