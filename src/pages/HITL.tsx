@@ -140,7 +140,7 @@ function HITLCard({ request, expanded, onToggle, onApprove, onDismiss, isMobile 
           {request.suggestedAction && (
             <div style={{
               background: 'var(--crumb)', borderRadius: 'var(--r-md)',
-              padding: 'var(--space-3) var(--space-4)', marginBottom: 'var(--space-5)',
+              padding: 'var(--space-3) var(--space-4)', marginBottom: 'var(--space-4)',
               display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)',
             }}>
               <span style={{ fontSize: '13px', marginTop: '1px', flexShrink: 0 }}>→</span>
@@ -150,7 +150,7 @@ function HITLCard({ request, expanded, onToggle, onApprove, onDismiss, isMobile 
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: isMobile ? 'wrap' : 'nowrap', paddingTop: 'var(--space-2)' }}>
             <ActionBtn label="Aprobar"   bg="var(--babka-blue)"  color="#fff"             hover="var(--babka-blue-deep)"  fullWidth={isMobile} onClick={() => onApprove(request.id)} />
             <ActionBtn label="Descartar" bg="var(--crumb)"       color="var(--ink-soft)"  hover="var(--line)"             fullWidth={isMobile} onClick={() => onDismiss(request.id)} />
           </div>
