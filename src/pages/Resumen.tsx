@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BRANCHES, BRANCH_SUMMARIES } from '../fixtures/branches'
+import { useBreakpoint } from '../hooks/useBreakpoint'
 import type { BranchId, BranchSummary, TrafficLight } from '../types'
 
 interface ResumenProps {
@@ -7,23 +8,35 @@ interface ResumenProps {
 }
 
 export function Resumen({ onNavigate }: ResumenProps) {
-  const totalCerradas = BRANCH_SUMMARIES.filter(s => s.reconciliationStatus === 'cerrado').length
+  const { isMobile } = useBreakpoint()
+  const totalCerradas  = BRANCH_SUMMARIES.filter(s => s.reconciliationStatus === 'cerrado').length
   const totalDescuadre = BRANCH_SUMMARIES.filter(s => s.reconciliationStatus === 'descuadre').length
-  const totalPendientes = BRANCH_SUMMARIES.filter(s => s.reconciliationStatus === 'pendiente').length
+  const totalPendientes= BRANCH_SUMMARIES.filter(s => s.reconciliationStatus === 'pendiente').length
 
   return (
     <div>
-      <PageHeader />
+      <PageHeader isMobile={isMobile} />
 
-      {/* KPIs globales */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-4)', marginBottom: 'var(--space-8)' }}>
-        <KpiCard label="Cerradas hoy" value={totalCerradas} total={5} color="var(--babka-blue)" />
-        <KpiCard label="Con descuadre" value={totalDescuadre} total={5} color="var(--wheat)" />
-        <KpiCard label="Sin reportar" value={totalPendientes} total={5} color="var(--babka-orange)" />
+      {/* KPIs */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: isMobile ? 'var(--space-3)' : 'var(--space-4)',
+        marginBottom: isMobile ? 'var(--space-6)' : 'var(--space-8)',
+      }}>
+        <KpiCard label="Cerradas" value={totalCerradas}  total={5} color="var(--babka-blue)"    isMobile={isMobile} />
+        <KpiCard label="Descuadre" value={totalDescuadre} total={5} color="var(--wheat)"         isMobile={isMobile} />
+        <KpiCard label="Pendientes" value={totalPendientes} total={5} color="var(--babka-orange)" isMobile={isMobile} />
       </div>
 
-      {/* Cards de sucursales */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 'var(--space-6)' }}>
+      {/* Branch cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile
+          ? '1fr'
+          : 'repeat(auto-fill, minmax(300px, 1fr))',
+        gap: isMobile ? 'var(--space-4)' : 'var(--space-6)',
+      }}>
         {BRANCH_SUMMARIES.map(summary => {
           const branch = BRANCHES.find(b => b.id === summary.branchId)!
           return (
@@ -31,6 +44,7 @@ export function Resumen({ onNavigate }: ResumenProps) {
               key={summary.branchId}
               summary={summary}
               branch={branch}
+              isMobile={isMobile}
               onNavigate={onNavigate}
             />
           )
@@ -40,57 +54,50 @@ export function Resumen({ onNavigate }: ResumenProps) {
   )
 }
 
-function PageHeader() {
+function PageHeader({ isMobile }: { isMobile: boolean }) {
   return (
-    <div style={{ marginBottom: 'var(--space-8)' }}>
+    <div style={{ marginBottom: isMobile ? 'var(--space-5)' : 'var(--space-8)' }}>
       <div style={{
-        fontFamily: 'var(--font-body)',
-        fontSize: 'var(--text-xs)',
-        fontWeight: 'var(--weight-bold)',
-        letterSpacing: 'var(--tracking-widest)',
-        textTransform: 'uppercase',
-        color: 'var(--bran)',
-        marginBottom: 'var(--space-2)',
+        fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-bold)',
+        letterSpacing: 'var(--tracking-widest)', textTransform: 'uppercase',
+        color: 'var(--bran)', marginBottom: 'var(--space-2)',
       }}>
         Lunes 8 de junio, 2026
       </div>
-      <h1 style={{ marginBottom: 'var(--space-2)' }}>Resumen del día</h1>
+      <h1 style={{ fontSize: isMobile ? 'var(--text-2xl)' : 'var(--text-4xl)', marginBottom: 'var(--space-2)' }}>
+        Resumen del día
+      </h1>
       <p style={{ color: 'var(--bran)', fontSize: 'var(--text-sm)' }}>
-        Estado de conciliación en tiempo real — SOCO Mérida
+        Estado de conciliación — SOCO Mérida
       </p>
     </div>
   )
 }
 
-function KpiCard({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
+function KpiCard({ label, value, total, color, isMobile }: {
+  label: string; value: number; total: number; color: string; isMobile: boolean
+}) {
   return (
     <div style={{
       background: 'var(--flour)',
-      borderRadius: 'var(--r-lg)',
-      padding: 'var(--space-6)',
+      borderRadius: isMobile ? 'var(--r-md)' : 'var(--r-lg)',
+      padding: isMobile ? 'var(--space-4)' : 'var(--space-6)',
       boxShadow: 'var(--shadow-md)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-1)', marginBottom: 'var(--space-1)' }}>
         <span style={{
           fontFamily: 'var(--font-mono)',
-          fontSize: 'var(--text-3xl)',
-          fontWeight: 'var(--weight-black)',
-          color,
-          lineHeight: 1,
-        }}>
-          {value}
-        </span>
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-lg)', color: 'var(--bran)', marginBottom: '4px' }}>
-          / {total}
+          fontSize: isMobile ? 'var(--text-2xl)' : 'var(--text-3xl)',
+          fontWeight: 'var(--weight-black)', color, lineHeight: 1,
+        }}>{value}</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-base)', color: 'var(--bran)', marginBottom: '2px' }}>
+          /{total}
         </span>
       </div>
       <div style={{
-        fontFamily: 'var(--font-body)',
-        fontSize: 'var(--text-xs)',
-        fontWeight: 'var(--weight-bold)',
-        letterSpacing: 'var(--tracking-wide)',
-        textTransform: 'uppercase',
-        color: 'var(--bran)',
+        fontFamily: 'var(--font-body)', fontSize: isMobile ? '9px' : 'var(--text-xs)',
+        fontWeight: 'var(--weight-bold)', letterSpacing: '0.06em',
+        textTransform: 'uppercase', color: 'var(--bran)',
       }}>
         {label}
       </div>
@@ -99,11 +106,7 @@ function KpiCard({ label, value, total, color }: { label: string; value: number;
 }
 
 function TrafficDot({ light }: { light: TrafficLight }) {
-  const colors: Record<TrafficLight, string> = {
-    verde: '#22C55E',
-    amarillo: '#E6B23C',
-    rojo: '#DC7A33',
-  }
+  const colors: Record<TrafficLight, string> = { verde: '#22C55E', amarillo: 'var(--wheat)', rojo: 'var(--babka-orange)' }
   const animations: Record<TrafficLight, string> = {
     verde: 'pulse-verde 2s ease-in-out infinite',
     amarillo: 'none',
@@ -111,47 +114,43 @@ function TrafficDot({ light }: { light: TrafficLight }) {
   }
   return (
     <div style={{
-      width: '10px', height: '10px',
-      borderRadius: '50%',
-      background: colors[light],
-      flexShrink: 0,
-      animation: animations[light],
+      width: '10px', height: '10px', borderRadius: '50%',
+      background: colors[light], flexShrink: 0, animation: animations[light],
     }} />
   )
 }
 
 function StatusBadge({ status }: { status: BranchSummary['reconciliationStatus'] }) {
   const styles: Record<string, { bg: string; color: string; label: string }> = {
-    cerrado:    { bg: 'rgba(34,197,94,0.12)',  color: '#16a34a', label: 'Cerrado' },
-    abierto:    { bg: 'var(--babka-blue-soft)', color: 'var(--babka-blue-deep)', label: 'Abierto' },
-    descuadre:  { bg: 'rgba(230,178,60,0.2)',  color: 'var(--wheat-deep)', label: 'Descuadre' },
-    pendiente:  { bg: 'rgba(220,122,51,0.15)', color: 'var(--babka-orange-deep)', label: 'Sin reportar' },
+    cerrado:   { bg: 'rgba(34,197,94,0.12)',  color: '#16a34a', label: 'Cerrado' },
+    abierto:   { bg: 'var(--babka-blue-soft)', color: 'var(--babka-blue-deep)', label: 'Abierto' },
+    descuadre: { bg: 'rgba(230,178,60,0.2)',  color: 'var(--wheat-deep)', label: 'Descuadre' },
+    pendiente: { bg: 'rgba(220,122,51,0.15)', color: 'var(--babka-orange-deep)', label: 'Sin reportar' },
   }
   const s = styles[status]
   return (
     <span style={{
       background: s.bg, color: s.color,
-      fontSize: '11px', fontWeight: 'var(--weight-bold)',
+      fontSize: '10px', fontWeight: 'var(--weight-bold)',
       letterSpacing: '0.06em', textTransform: 'uppercase',
-      padding: '4px 12px', borderRadius: 'var(--r-pill)',
-      fontFamily: 'var(--font-body)',
-    }}>
-      {s.label}
-    </span>
+      padding: '3px 10px', borderRadius: 'var(--r-pill)',
+      fontFamily: 'var(--font-body)', whiteSpace: 'nowrap',
+    }}>{s.label}</span>
   )
 }
 
-function BranchCard({ summary, branch, onNavigate }: {
+function BranchCard({ summary, branch, isMobile, onNavigate }: {
   summary: BranchSummary
-  branch: ReturnType<typeof BRANCHES.find> & {}
+  branch: (typeof BRANCHES)[number]
+  isMobile: boolean
   onNavigate: ResumenProps['onNavigate']
 }) {
   const [hovered, setHovered] = useState(false)
 
   const accentColors: Record<TrafficLight, string> = {
-    verde: '#22C55E',
+    verde:    '#22C55E',
     amarillo: 'var(--wheat)',
-    rojo: 'var(--babka-orange)',
+    rojo:     'var(--babka-orange)',
   }
 
   return (
@@ -163,25 +162,21 @@ function BranchCard({ summary, branch, onNavigate }: {
         background: 'var(--flour)',
         borderRadius: 'var(--r-lg)',
         boxShadow: hovered ? 'var(--shadow-lg)' : 'var(--shadow-md)',
-        transform: hovered ? 'translateY(-3px)' : 'none',
+        transform: hovered && !isMobile ? 'translateY(-3px)' : 'none',
         transition: 'box-shadow var(--transition), transform var(--transition)',
         cursor: 'pointer',
         overflow: 'hidden',
       }}
     >
-      {/* Header con blob de color */}
+      {/* Header */}
       <div style={{
         background: accentColors[summary.light],
-        padding: 'var(--space-4) var(--space-6)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        padding: isMobile ? 'var(--space-3) var(--space-4)' : 'var(--space-4) var(--space-6)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{
-          fontFamily: 'var(--font-display)',
-          fontWeight: 'var(--weight-black)',
-          fontSize: 'var(--text-xl)',
-          color: 'var(--ink)',
+          fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-black)',
+          fontSize: isMobile ? 'var(--text-lg)' : 'var(--text-xl)', color: 'var(--ink)',
         }}>
           {branch?.shortName}
         </div>
@@ -192,54 +187,44 @@ function BranchCard({ summary, branch, onNavigate }: {
       </div>
 
       {/* Body */}
-      <div style={{ padding: 'var(--space-6)' }}>
-        <div style={{ marginBottom: 'var(--space-4)', fontSize: 'var(--text-sm)', color: 'var(--bran)' }}>
+      <div style={{ padding: isMobile ? 'var(--space-4)' : 'var(--space-6)' }}>
+        <div style={{ marginBottom: 'var(--space-3)', fontSize: 'var(--text-xs)', color: 'var(--bran)' }}>
           {branch?.manager} · {formatTime(summary.lastUpdate)}
         </div>
 
         {summary.reconciliationStatus === 'pendiente' ? (
           <div style={{
-            padding: 'var(--space-6)',
-            background: 'var(--crumb)',
-            borderRadius: 'var(--r-md)',
-            textAlign: 'center',
-            color: 'var(--bran)',
-            fontSize: 'var(--text-sm)',
+            padding: 'var(--space-4)', background: 'var(--crumb)',
+            borderRadius: 'var(--r-md)', textAlign: 'center',
+            color: 'var(--bran)', fontSize: 'var(--text-sm)',
           }}>
             Sin reporte de cierre
           </div>
         ) : (
           <>
-            {/* Barra de distribución */}
             <DistributionBar summary={summary} />
-
-            {/* Métricas */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-3)', marginTop: 'var(--space-4)' }}>
-              <Metric label="Vendido" value={summary.soldUnits} total={summary.totalUnits} />
-              <Metric label="Traspaso" value={summary.transferUnits} total={summary.totalUnits} />
-              <Metric label="Merma" value={summary.wasteUnits} total={summary.totalUnits} />
-              <Metric label="Personal" value={summary.staffUnits} total={summary.totalUnits} />
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 'var(--space-3)',
+              marginTop: 'var(--space-4)',
+            }}>
+              <Metric label="Vendido"  value={summary.soldUnits}     total={summary.totalUnits} />
+              <Metric label="Traspaso" value={summary.transferUnits}  total={summary.totalUnits} />
+              <Metric label="Merma"    value={summary.wasteUnits}     total={summary.totalUnits} />
+              <Metric label="Personal" value={summary.staffUnits}     total={summary.totalUnits} />
             </div>
-
             {summary.diferencia !== 0 && (
               <div style={{
-                marginTop: 'var(--space-4)',
+                marginTop: 'var(--space-3)',
                 padding: 'var(--space-3) var(--space-4)',
-                background: 'rgba(230,178,60,0.15)',
-                borderRadius: 'var(--r-md)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
+                background: 'rgba(230,178,60,0.15)', borderRadius: 'var(--r-md)',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
                 <span style={{ fontSize: 'var(--text-sm)', color: 'var(--wheat-deep)', fontWeight: 'var(--weight-medium)' }}>
                   Diferencia
                 </span>
-                <span style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 'var(--text-sm)',
-                  fontWeight: 'var(--weight-bold)',
-                  color: 'var(--wheat-deep)',
-                }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', color: 'var(--wheat-deep)' }}>
                   +{summary.diferencia} pzas
                 </span>
               </div>
@@ -254,22 +239,15 @@ function BranchCard({ summary, branch, onNavigate }: {
 function DistributionBar({ summary }: { summary: BranchSummary }) {
   const total = summary.totalUnits || 1
   const segments = [
-    { value: summary.soldUnits, color: 'var(--babka-blue)', label: 'Vendido' },
-    { value: summary.transferUnits, color: 'var(--wheat)', label: 'Traspaso' },
-    { value: summary.wasteUnits, color: 'var(--babka-orange)', label: 'Merma' },
-    { value: summary.staffUnits, color: 'var(--crumb)', label: 'Personal' },
+    { value: summary.soldUnits,     color: 'var(--babka-blue)' },
+    { value: summary.transferUnits, color: 'var(--wheat)' },
+    { value: summary.wasteUnits,    color: 'var(--babka-orange)' },
+    { value: summary.staffUnits,    color: 'var(--crumb)' },
   ]
   return (
     <div style={{ height: '8px', borderRadius: 'var(--r-pill)', overflow: 'hidden', display: 'flex' }}>
       {segments.map((seg, i) => (
-        <div
-          key={i}
-          style={{
-            width: `${(seg.value / total) * 100}%`,
-            background: seg.color,
-            transition: 'width var(--transition)',
-          }}
-        />
+        <div key={i} style={{ width: `${(seg.value / total) * 100}%`, background: seg.color }} />
       ))}
     </div>
   )
@@ -295,6 +273,5 @@ function Metric({ label, value, total }: { label: string; value: number; total: 
 }
 
 function formatTime(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 }
