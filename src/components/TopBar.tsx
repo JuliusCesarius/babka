@@ -1,4 +1,5 @@
 import { HITL_REQUESTS } from '../fixtures/branches'
+import type { UserRole } from '../App'
 
 const PAGE_LABELS: Record<string, string> = {
   resumen:        'Resumen',
@@ -12,9 +13,11 @@ const PAGE_LABELS: Record<string, string> = {
 interface TopBarProps {
   page: string
   onNavigate: (page: string) => void
+  role: UserRole
+  onRoleChange: (r: UserRole) => void
 }
 
-export function TopBar({ page, onNavigate }: TopBarProps) {
+export function TopBar({ page, onNavigate, role, onRoleChange }: TopBarProps) {
   const pendingHITL = HITL_REQUESTS.length
 
   return (
@@ -38,12 +41,15 @@ export function TopBar({ page, onNavigate }: TopBarProps) {
         BABKA
       </div>
 
-      {/* Current page label */}
-      <div style={{
-        fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
-        fontWeight: 'var(--weight-medium)', color: 'rgba(255,255,255,0.7)',
-      }}>
-        {PAGE_LABELS[page] ?? page}
+      {/* Center: page label + role toggle */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+        <div style={{
+          fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+          fontWeight: 'var(--weight-medium)', color: 'rgba(255,255,255,0.7)',
+        }}>
+          {PAGE_LABELS[page] ?? page}
+        </div>
+        <RoleToggle role={role} onRoleChange={onRoleChange} compact />
       </div>
 
       {/* Avatar + HITL badge */}
@@ -63,13 +69,53 @@ export function TopBar({ page, onNavigate }: TopBarProps) {
         )}
         <div style={{
           width: '30px', height: '30px', borderRadius: 'var(--r-pill)',
-          background: 'var(--wheat)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: role === 'exec' ? 'var(--babka-orange)' : 'var(--wheat)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-black)',
           fontSize: '13px', color: 'var(--ink)',
         }}>
-          C
+          {role === 'exec' ? 'E' : 'C'}
         </div>
       </div>
     </header>
+  )
+}
+
+export function RoleToggle({ role, onRoleChange, compact = false }: {
+  role: UserRole
+  onRoleChange: (r: UserRole) => void
+  compact?: boolean
+}) {
+  return (
+    <div style={{
+      display: 'flex',
+      background: 'rgba(255,255,255,0.1)',
+      borderRadius: 'var(--r-pill)',
+      padding: '2px',
+      gap: '2px',
+    }}>
+      {(['ops', 'exec'] as UserRole[]).map(r => (
+        <button
+          key={r}
+          onClick={() => onRoleChange(r)}
+          style={{
+            padding: compact ? '2px 10px' : '4px 16px',
+            borderRadius: 'var(--r-pill)',
+            border: 'none',
+            background: role === r ? (r === 'exec' ? 'var(--babka-orange)' : 'var(--wheat)') : 'transparent',
+            color: role === r ? 'var(--ink)' : 'rgba(255,255,255,0.55)',
+            fontFamily: 'var(--font-body)',
+            fontSize: compact ? '10px' : 'var(--text-xs)',
+            fontWeight: 'var(--weight-black)',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
+          }}
+        >
+          {r === 'ops' ? 'OPS' : 'EXEC'}
+        </button>
+      ))}
+    </div>
   )
 }

@@ -3,20 +3,23 @@ import { Nav } from './Nav'
 import { TopBar } from './TopBar'
 import { BottomNav } from './BottomNav'
 import { useBreakpoint } from '../hooks/useBreakpoint'
+import type { UserRole } from '../App'
 
 interface LayoutProps {
   page: string
   onNavigate: (page: string) => void
   children: ReactNode
+  role: UserRole
+  onRoleChange: (r: UserRole) => void
 }
 
-export function Layout({ page, onNavigate, children }: LayoutProps) {
+export function Layout({ page, onNavigate, children, role, onRoleChange }: LayoutProps) {
   const { isMobile, isTablet } = useBreakpoint()
 
   if (isMobile) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--flour-warm)' }}>
-        <TopBar page={page} onNavigate={onNavigate} />
+        <TopBar page={page} onNavigate={onNavigate} role={role} onRoleChange={onRoleChange} />
         <main style={{ flex: 1, padding: 'var(--space-4)', paddingBottom: '72px' }}>
           {children}
         </main>
@@ -37,10 +40,10 @@ export function Layout({ page, onNavigate, children }: LayoutProps) {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--flour-warm)' }}>
-      <Nav page={page} onNavigate={onNavigate} />
+    <div style={{ display: 'flex', minHeight: '100vh', background: role === 'exec' ? '#F5F4F0' : 'var(--flour-warm)' }}>
+      <Nav page={page} onNavigate={onNavigate} role={role} onRoleChange={onRoleChange} />
       <main style={{ flex: 1, padding: 'var(--space-8)', minWidth: 0 }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        <div style={{ maxWidth: role === 'exec' ? '1200px' : '1100px', margin: '0 auto' }}>
           {children}
         </div>
       </main>

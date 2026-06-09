@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { INITIAL_MESSAGES, getSimulatedResponse } from '../fixtures/chat'
 import { useBreakpoint } from '../hooks/useBreakpoint'
 import type { ChatMessage, ChatCard } from '../fixtures/chat'
+import type { UserRole } from '../App'
 
-const QUICK_ACTIONS = [
+const OPS_QUICK_ACTIONS = [
   'Resumen del día',
   'Estado de Norte',
   'Cola HITL',
@@ -11,11 +12,36 @@ const QUICK_ACTIONS = [
   'Traspasos pendientes',
 ]
 
+const EXEC_QUICK_ACTIONS = [
+  'Resumen ejecutivo',
+  'Eficiencia esta semana',
+  'Alertas de patrón',
+  'Impacto acumulado',
+  'Próximas entregas',
+]
+
+const EXEC_INITIAL_MESSAGES: ChatMessage[] = [
+  {
+    id: 'exec-1',
+    role: 'agent',
+    content: 'Buenos días. Esta semana SOCO Mérida procesó 5,824 unidades en 5 sucursales.',
+    timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+  },
+  {
+    id: 'exec-2',
+    role: 'agent',
+    content: 'Eficiencia general: 87% · Vendido promedio: 84% · Merma: 5.4%\n\nAlerta: Norte acumula +7 pzas de descuadre en 8 días — segundo evento esta semana. Sugiero revisión de proceso con Sofía.',
+    timestamp: new Date(Date.now() - 1000 * 60 * 5 + 800).toISOString(),
+  },
+]
+
 let msgCounter = 100
 
-export function AgentChat() {
+export function AgentChat({ role = 'ops' }: { role?: UserRole }) {
   const { isMobile } = useBreakpoint()
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES)
+  const isExec = role === 'exec'
+  const QUICK_ACTIONS = isExec ? EXEC_QUICK_ACTIONS : OPS_QUICK_ACTIONS
+  const [messages, setMessages] = useState<ChatMessage[]>(isExec ? EXEC_INITIAL_MESSAGES : INITIAL_MESSAGES)
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -91,7 +117,9 @@ export function AgentChat() {
             }}>Clarisa AI</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
               <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#22C55E' }} />
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--bran)' }}>En línea · monitoreando 5 sucursales</span>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--bran)' }}>
+                {isExec ? 'Vista ejecutiva · análisis estratégico' : 'En línea · monitoreando 5 sucursales'}
+              </span>
             </div>
           </div>
         </div>
