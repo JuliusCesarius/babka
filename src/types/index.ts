@@ -70,6 +70,17 @@ export interface Reconciliation {
   notes?: string
 }
 
+export type EventSource = 'pos' | 'manual' | 'traspaso' | 'sistema'
+
+export interface ItemEvent {
+  id: string
+  time: string // ISO datetime
+  source: EventSource
+  description: string
+  quantity: number
+  operator?: string
+}
+
 export type HITLType =
   | 'descuadre'
   | 'traspaso'

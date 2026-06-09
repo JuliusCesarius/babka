@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { BRANCHES, RECONCILIATIONS, BRANCH_SUMMARIES } from '../fixtures/branches'
+import { getItemEvents } from '../fixtures/events'
 import { useBreakpoint } from '../hooks/useBreakpoint'
-import type { BranchId, Reconciliation, ReconciliationItem } from '../types'
+import type { BranchId, Reconciliation, ReconciliationItem, ReconciliationDestino, ItemEvent } from '../types'
 
 interface ConciliacionesProps {
   initialBranchId?: BranchId
@@ -191,9 +192,20 @@ function RecCard({ rec, isSelected, onClick }: {
   )
 }
 
+type ActiveCell = { itemId: string; destino: ReconciliationDestino; label: string; productName: string; total: number } | null
+
 function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }) {
   const branch = BRANCHES.find(b => b.id === rec.branchId)!
   const activeDestinos = DESTINOS.filter(d => rec.items.some(i => (i[d.key] as number) > 0))
+  const [activeCell, setActiveCell] = useState<ActiveCell>(null)
+
+  const handleCellClick = (item: ReconciliationItem, destino: ReconciliationDestino, label: string) => {
+    const total = item[destino] as number
+    if (total === 0) return
+    const key = `${item.id}:${destino}`
+    const currentKey = activeCell ? `${activeCell.itemId}:${activeCell.destino}` : null
+    setActiveCell(currentKey === key ? null : { itemId: item.id, destino, label, productName: item.productName, total })
+  }
 
   return (
     <div style={{ background: 'var(--flour)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
@@ -237,9 +249,21 @@ function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }
                 </td>
                 <Td>{item.opening}</Td>
                 <Td>{item.produced}</Td>
-                {activeDestinos.map(d => (
-                  <Td key={d.key} highlight={d.key === 'vendido'}>{item[d.key] as number}</Td>
-                ))}
+                {activeDestinos.map(d => {
+                  const isActive = activeCell?.itemId === item.id && activeCell?.destino === d.key
+                  const val = item[d.key] as number
+                  return (
+                    <Td
+                      key={d.key}
+                      highlight={d.key === 'vendido'}
+                      clickable={val > 0}
+                      active={isActive}
+                      onClick={val > 0 ? () => handleCellClick(item, d.key as ReconciliationDestino, d.label) : undefined}
+                    >
+                      {val}
+                    </Td>
+                  )
+                })}
                 <Td>{item.closing}</Td>
                 <Td accent={item.diferencia !== 0}>{item.diferencia === 0 ? '—' : `+${item.diferencia}`}</Td>
               </tr>
@@ -261,6 +285,11 @@ function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }
           </tfoot>
         </table>
       </div>
+
+      {/* Cell event detail panel */}
+      {activeCell && (
+        <CellEventPanel cell={activeCell} onClose={() => setActiveCell(null)} />
+      )}
     </div>
   )
 }
@@ -276,17 +305,142 @@ function Th({ children, align = 'right' }: { children: React.ReactNode; align?: 
   )
 }
 
-function Td({ children, bold, highlight, accent }: {
-  children: React.ReactNode; bold?: boolean; highlight?: boolean; accent?: boolean
+function Td({ children, bold, highlight, accent, clickable, active, onClick }: {
+  children: React.ReactNode
+  bold?: boolean
+  highlight?: boolean
+  accent?: boolean
+  clickable?: boolean
+  active?: boolean
+  onClick?: () => void
 }) {
+  const [hovered, setHovered] = useState(false)
   return (
-    <td style={{
-      padding: 'var(--space-3) var(--space-3)',
-      textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)',
-      color: accent ? 'var(--wheat-deep)' : highlight ? 'var(--babka-blue)' : 'var(--ink-soft)',
-      fontWeight: bold || accent ? 'var(--weight-bold)' : 'var(--weight-regular)',
-      whiteSpace: 'nowrap',
-    }}>{children}</td>
+    <td
+      onClick={onClick}
+      onMouseEnter={() => clickable && setHovered(true)}
+      onMouseLeave={() => clickable && setHovered(false)}
+      style={{
+        padding: 'var(--space-3) var(--space-3)',
+        textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)',
+        color: accent ? 'var(--wheat-deep)' : highlight ? 'var(--babka-blue)' : 'var(--ink-soft)',
+        fontWeight: bold || accent ? 'var(--weight-bold)' : 'var(--weight-regular)',
+        whiteSpace: 'nowrap',
+        cursor: clickable ? 'pointer' : 'default',
+        background: active
+          ? 'rgba(59,130,246,0.1)'
+          : hovered
+            ? 'rgba(59,130,246,0.05)'
+            : 'transparent',
+        borderBottom: active ? '2px solid var(--babka-blue)' : '2px solid transparent',
+        transition: 'background 0.12s, border-color 0.12s',
+        position: 'relative',
+      }}
+    >
+      {children}
+      {clickable && !active && (
+        <span style={{ fontSize: '8px', color: 'var(--bran)', marginLeft: '3px', verticalAlign: 'middle', opacity: hovered ? 1 : 0, transition: 'opacity 0.12s' }}>▾</span>
+      )}
+    </td>
+  )
+}
+
+const SOURCE_META: Record<string, { icon: string; color: string; label: string }> = {
+  pos:      { icon: '⊡', color: 'var(--babka-blue)',     label: 'POS' },
+  manual:   { icon: '✎', color: 'var(--wheat-deep)',      label: 'Manual' },
+  traspaso: { icon: '⇄', color: '#8B5CF6',               label: 'Traspaso' },
+  sistema:  { icon: '⚙', color: 'var(--bran)',            label: 'Sistema' },
+}
+
+function CellEventPanel({ cell, onClose }: { cell: NonNullable<ActiveCell>; onClose: () => void }) {
+  const events: ItemEvent[] = getItemEvents(cell.itemId, cell.destino)
+  const registeredTotal = events.reduce((s, e) => s + e.quantity, 0)
+  const unaccounted = cell.total - registeredTotal
+
+  return (
+    <div style={{
+      borderTop: '2px solid var(--babka-blue)',
+      background: 'var(--flour-warm)',
+      padding: 'var(--space-4)',
+    }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
+        <div>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 'var(--weight-bold)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--babka-blue)' }}>
+            {cell.label}
+          </span>
+          <span style={{ fontSize: '10px', color: 'var(--bran)', margin: '0 6px' }}>·</span>
+          <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--bran)' }}>
+            {cell.productName}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-black)', color: 'var(--ink)' }}>
+            {cell.total} pzas
+          </span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--bran)', fontSize: '16px', lineHeight: 1, padding: '0 2px' }}>×</button>
+        </div>
+      </div>
+
+      {/* Event list */}
+      {events.length === 0 ? (
+        <div style={{ padding: 'var(--space-3) 0', fontSize: 'var(--text-xs)', color: 'var(--bran)', fontStyle: 'italic' }}>
+          Sin registros individuales — total ingresado manualmente al cierre
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {events.map(ev => {
+            const meta = SOURCE_META[ev.source] ?? SOURCE_META.manual
+            const time = new Date(ev.time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+            return (
+              <div key={ev.id} style={{
+                display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
+                padding: '6px 10px', borderRadius: 'var(--r-md)',
+                background: 'var(--flour)', border: '1px solid var(--line)',
+              }}>
+                <span style={{ fontSize: '13px', color: meta.color, flexShrink: 0, width: '18px', textAlign: 'center' }}>{meta.icon}</span>
+                <span style={{ fontSize: '10px', fontWeight: 'var(--weight-bold)', color: meta.color, background: `${meta.color}18`, padding: '1px 6px', borderRadius: 'var(--r-pill)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  {meta.label}
+                </span>
+                <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: 'var(--ink)' }}>{ev.description}</span>
+                {ev.operator && (
+                  <span style={{ fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap', flexShrink: 0 }}>{ev.operator}</span>
+                )}
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap', flexShrink: 0 }}>{time}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', color: 'var(--ink)', flexShrink: 0, minWidth: '28px', textAlign: 'right' }}>
+                  {ev.quantity}
+                </span>
+              </div>
+            )
+          })}
+
+          {/* Unaccounted warning */}
+          {unaccounted > 0 && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
+              padding: '6px 10px', borderRadius: 'var(--r-md)',
+              background: 'rgba(220,80,50,0.08)', border: '1px solid rgba(220,80,50,0.3)',
+            }}>
+              <span style={{ fontSize: '13px', color: 'var(--babka-orange)', width: '18px', textAlign: 'center' }}>⚠</span>
+              <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: 'var(--babka-orange)', fontWeight: 'var(--weight-medium)' }}>
+                {unaccounted} pzas sin evento registrado
+              </span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', color: 'var(--babka-orange)' }}>
+                +{unaccounted}
+              </span>
+            </div>
+          )}
+
+          {/* Summary row */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', paddingTop: '4px', borderTop: '1px solid var(--line)', marginTop: '2px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--bran)' }}>{events.length} evento{events.length !== 1 ? 's' : ''} · total registrado</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-black)', color: registeredTotal === cell.total ? '#16a34a' : 'var(--wheat-deep)' }}>
+              {registeredTotal} / {cell.total}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
