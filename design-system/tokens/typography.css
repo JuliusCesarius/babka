@@ -1,0 +1,58 @@
+/* ─── BABKA TYPOGRAPHY TOKENS ─────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500;1,9..144,900&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Font families */
+  --font-display:   'Fraunces', Georgia, serif;
+  --font-body:      'DM Sans', system-ui, sans-serif;
+  --font-mono:      'JetBrains Mono', 'Courier New', monospace;
+
+  /* Scale — fluid-ready base */
+  --text-xs:    0.75rem;   /* 12px */
+  --text-sm:    0.875rem;  /* 14px */
+  --text-base:  1rem;      /* 16px */
+  --text-md:    1.125rem;  /* 18px */
+  --text-lg:    1.25rem;   /* 20px */
+  --text-xl:    1.5rem;    /* 24px */
+  --text-2xl:   2rem;      /* 32px */
+  --text-3xl:   2.5rem;    /* 40px */
+  --text-4xl:   3.5rem;    /* 56px */
+  --text-hero:  5rem;      /* 80px */
+
+  /* Weight */
+  --weight-light:     300;
+  --weight-regular:   400;
+  --weight-medium:    500;
+  --weight-semibold:  600;
+  --weight-bold:      700;
+  --weight-black:     900;
+
+  /* Line-height */
+  --leading-tight:    1.1;
+  --leading-snug:     1.25;
+  --leading-normal:   1.5;
+  --leading-relaxed:  1.7;
+
+  /* Letter-spacing */
+  --tracking-tighter: -0.03em;
+  --tracking-tight:   -0.01em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.06em;
+  --tracking-wider:   0.12em;
+  --tracking-widest:  0.18em;
+
+  /* ── Semantic type roles ──────────────────────────────────────────────── */
+  --type-wordmark:      var(--font-display);
+  --type-heading:       var(--font-display);
+  --type-body:          var(--font-body);
+  --type-label:         var(--font-body);
+  --type-badge:         var(--font-body);
+  --type-data:          var(--font-mono);
+  --type-price:         var(--font-display);
+
+  /* Pan de Hoy lockup */
+  --lockup-font:        var(--font-body);
+  --lockup-weight:      var(--weight-bold);
+  --lockup-tracking:    var(--tracking-widest);
+  --lockup-transform:   uppercase; /* @kind other */
+}

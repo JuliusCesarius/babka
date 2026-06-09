@@ -1,0 +1,35 @@
+<!-- @dsCard group="Colors" viewport="700x160" name="Amarillo trigo" subtitle="Primario — CTAs, badges, highlights — 20% del layout" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { background: var(--flour-warm); padding: 20px; font-family: var(--font-body); }
+  .row { display: flex; gap: 8px; }
+  .swatch { flex: 1; border-radius: var(--r-md); padding: 16px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .swatch-name { font-weight: var(--weight-medium); font-size: var(--text-sm); }
+  .swatch-var  { font-family: var(--font-mono); font-size: 10px; opacity: 0.75; }
+  .swatch-hex  { font-family: var(--font-mono); font-size: 11px; }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="swatch" style="background:var(--wheat); color:var(--ink); flex:2;">
+    <span class="swatch-name">Wheat</span>
+    <span class="swatch-var">--wheat</span>
+    <span class="swatch-hex">#E6B23C</span>
+  </div>
+  <div class="swatch" style="background:var(--wheat-deep); color:var(--ink);">
+    <span class="swatch-name">Deep</span>
+    <span class="swatch-var">--wheat-deep</span>
+    <span class="swatch-hex">#C9912A</span>
+  </div>
+  <div class="swatch" style="background:var(--wheat-light); color:var(--ink); border:1px solid var(--line);">
+    <span class="swatch-name">Light</span>
+    <span class="swatch-var">--wheat-light</span>
+    <span class="swatch-hex">#F6E5A9</span>
+  </div>
+</div>
+</body>
+</html>

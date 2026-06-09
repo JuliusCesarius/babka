@@ -1,0 +1,68 @@
+<!-- @dsCard group="Colors" viewport="700x220" name="Neutros de pan" subtitle="Fondos y estructura — 60% del layout" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  body { background: var(--flour-warm); padding: 20px; font-family: var(--font-body); }
+  .row { display: flex; gap: 6px; }
+  .swatch { flex: 1; border-radius: var(--r-md); padding: 14px 10px 10px; display: flex; flex-direction: column; gap: 4px; }
+  .swatch-name { font-weight: var(--weight-medium); font-size: 12px; }
+  .swatch-var  { font-family: var(--font-mono); font-size: 9px; opacity: 0.7; }
+  .swatch-hex  { font-family: var(--font-mono); font-size: 10px; }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="swatch" style="background:var(--flour); border:1px solid var(--line); color:var(--ink);">
+    <span class="swatch-name">Flour</span>
+    <span class="swatch-var">--flour</span>
+    <span class="swatch-hex">#FFFFFF</span>
+  </div>
+  <div class="swatch" style="background:var(--flour-warm); border:1px solid var(--line); color:var(--ink);">
+    <span class="swatch-name">Warm</span>
+    <span class="swatch-var">--flour-warm</span>
+    <span class="swatch-hex">#FCFAF4</span>
+  </div>
+  <div class="swatch" style="background:var(--crumb); color:var(--ink);">
+    <span class="swatch-name">Crumb</span>
+    <span class="swatch-var">--crumb</span>
+    <span class="swatch-hex">#F4EEE1</span>
+  </div>
+  <div class="swatch" style="background:var(--line); color:var(--ink);">
+    <span class="swatch-name">Line</span>
+    <span class="swatch-var">--line</span>
+    <span class="swatch-hex">#E8E0CF</span>
+  </div>
+  <div class="swatch" style="background:var(--bran); color:#fff;">
+    <span class="swatch-name">Bran</span>
+    <span class="swatch-var">--bran</span>
+    <span class="swatch-hex">#8A7E6B</span>
+  </div>
+  <div class="swatch" style="background:var(--crust); color:#fff;">
+    <span class="swatch-name">Crust</span>
+    <span class="swatch-var">--crust</span>
+    <span class="swatch-hex">#9C6B3F</span>
+  </div>
+  <div class="swatch" style="background:var(--toast); color:#fff;">
+    <span class="swatch-name">Toast</span>
+    <span class="swatch-var">--toast</span>
+    <span class="swatch-hex">#6E4A2E</span>
+  </div>
+</div>
+<div class="row" style="margin-top:6px;">
+  <div class="swatch" style="background:var(--ink); color:#fff; flex:2;">
+    <span class="swatch-name">Ink</span>
+    <span class="swatch-var">--ink</span>
+    <span class="swatch-hex">#1A1714</span>
+  </div>
+  <div class="swatch" style="background:var(--ink-soft); color:#fff; flex:2;">
+    <span class="swatch-name">Ink Soft</span>
+    <span class="swatch-var">--ink-soft</span>
+    <span class="swatch-hex">#3A352E</span>
+  </div>
+  <div style="flex:3;"></div>
+</div>
+</body>
+</html>

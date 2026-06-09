@@ -1,0 +1,176 @@
+<!-- @dsCard group="Components" viewport="700x520" name="Core Components" subtitle="Button, Badge, Input, ProductCard" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,900;1,9..144,900&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+:root {
+  --babka-blue:#1F5AD9; --babka-blue-deep:#143F9E; --babka-blue-soft:#D5E2FB;
+  --wheat:#E6B23C; --wheat-deep:#C9912A; --wheat-light:#F6E5A9;
+  --babka-orange:#DC7A33; --babka-orange-deep:#BC5F1F;
+  --flour:#FFFFFF; --flour-warm:#FCFAF4; --crumb:#F4EEE1;
+  --crust:#9C6B3F; --bran:#8A7E6B; --line:#E8E0CF;
+  --ink:#1A1714; --ink-soft:#3A352E;
+  --r-sm:10px; --r-md:18px; --r-lg:28px; --r-pill:999px;
+  --shadow-sm:0 1px 4px 0 rgba(26,23,20,.07); --shadow-md:0 4px 12px 0 rgba(26,23,20,.08);
+  --shadow-lg:0 8px 28px 0 rgba(26,23,20,.10);
+  --ease-out:cubic-bezier(.2,.8,.2,1);
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono','Courier New',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--flour-warm);padding:20px;font-family:var(--font-body);}
+.sec-label{font-family:var(--font-mono);font-size:10px;color:var(--bran);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.divider{border:none;border-top:1px solid var(--line);margin:20px 0;}
+@keyframes babka-spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+/* ── Button ── */
+function Button({ variant='primary', size='md', disabled=false, loading=false, children, onClick }) {
+  const [hov,setHov]=useState(false), [pressed,setPressed]=useState(false);
+  const sizes={sm:{fontSize:'11px',padding:'7px 16px',height:'32px'},md:{fontSize:'12px',padding:'10px 24px',height:'40px'},lg:{fontSize:'13px',padding:'13px 32px',height:'48px'}};
+  const vMap={
+    primary:{background:hov?'var(--wheat-deep)':'var(--wheat)',color:'var(--ink)'},
+    secondary:{background:hov?'var(--babka-blue-deep)':'var(--babka-blue)',color:'#fff'},
+    ghost:{background:hov?'var(--ink)':'transparent',color:hov?'#fff':'var(--ink)',border:'1.5px solid var(--ink)'},
+    orange:{background:hov?'var(--babka-orange-deep)':'var(--babka-orange)',color:'var(--ink)'},
+    subtle:{background:hov?'var(--line)':'var(--crumb)',color:'var(--ink)'},
+  };
+  return <button type="button" style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:'8px',fontFamily:'var(--font-body)',fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',border:'none',borderRadius:'var(--r-pill)',cursor:disabled||loading?'not-allowed':'pointer',transition:'background .3s,color .3s,transform .15s',whiteSpace:'nowrap',outline:'none',opacity:disabled?.45:1,transform:pressed?'scale(.97)':hov?'translateY(-1px)':'none',...sizes[size],...(vMap[variant]||vMap.primary)}} disabled={disabled} onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>{setHov(false);setPressed(false);}} onMouseDown={()=>setPressed(true)} onMouseUp={()=>setPressed(false)}>
+    {loading&&<span style={{width:'14px',height:'14px',border:'2px solid currentColor',borderTopColor:'transparent',borderRadius:'50%',display:'inline-block',animation:'babka-spin .7s linear infinite'}}/>}
+    {children}
+  </button>;
+}
+
+/* ── Badge ── */
+function Badge({ variant='wheat', size='md', dot=false, children }) {
+  const sizes={sm:{fontSize:'10px',padding:'3px 10px'},md:{fontSize:'11px',padding:'5px 12px'},lg:{fontSize:'12px',padding:'6px 16px'}};
+  const vMap={
+    wheat:{background:'var(--wheat)',color:'var(--ink)'},
+    'wheat-light':{background:'var(--wheat-light)',color:'var(--ink)',border:'1px solid var(--wheat)'},
+    blue:{background:'var(--babka-blue)',color:'#fff'},
+    'blue-soft':{background:'var(--babka-blue-soft)',color:'var(--babka-blue-deep)'},
+    orange:{background:'var(--babka-orange)',color:'var(--ink)'},
+    crust:{background:'var(--crust)',color:'#fff'},
+    crumb:{background:'var(--crumb)',color:'var(--ink-soft)',border:'1px solid var(--line)'},
+    ink:{background:'var(--ink)',color:'#fff'},
+  };
+  return <span style={{display:'inline-flex',alignItems:'center',gap:'5px',fontFamily:'var(--font-body)',fontWeight:500,letterSpacing:'.08em',textTransform:'uppercase',borderRadius:'var(--r-pill)',whiteSpace:'nowrap',lineHeight:1,...sizes[size],...(vMap[variant]||vMap.wheat)}}>
+    {dot&&<span style={{width:'6px',height:'6px',borderRadius:'50%',background:'currentColor',opacity:.7,flexShrink:0}}/>}
+    {children}
+  </span>;
+}
+
+/* ── Input ── */
+function Input({ label, hint, error, placeholder, value, onChange, disabled=false, prefix, suffix, required=false, type='text' }) {
+  const [focused,setFocused]=useState(false);
+  const id = label ? label.toLowerCase().replace(/\s+/g,'-') : undefined;
+  return <div style={{display:'flex',flexDirection:'column',gap:'6px',fontFamily:'var(--font-body)',width:'100%'}}>
+    {label&&<label htmlFor={id} style={{fontSize:'12px',fontWeight:500,color:'var(--ink)',letterSpacing:'.04em',textTransform:'uppercase'}}>{label}{required&&<span style={{color:'var(--babka-orange)',marginLeft:'3px'}}>*</span>}</label>}
+    <div style={{display:'flex',alignItems:'center',background:disabled?'var(--crumb)':'var(--flour-warm)',border:`1.5px solid ${error?'var(--babka-orange)':focused?'var(--babka-blue)':'var(--line)'}`,borderRadius:'var(--r-md)',boxShadow:focused?'0 0 0 3px var(--babka-blue-soft)':'none',transition:'border-color .2s,box-shadow .2s',overflow:'hidden'}}>
+      {prefix&&<span style={{padding:'0 12px',color:'var(--bran)',fontSize:'var(--text-sm)',fontFamily:'var(--font-mono)',background:'var(--crumb)',alignSelf:'stretch',display:'flex',alignItems:'center',borderRight:'1px solid var(--line)'}}>{prefix}</span>}
+      <input id={id} type={type} placeholder={placeholder} value={value} onChange={onChange} disabled={disabled} required={required}
+        style={{flex:1,border:'none',outline:'none',background:'transparent',padding:'10px 14px',fontSize:'16px',fontFamily:'var(--font-body)',color:disabled?'var(--bran)':'var(--ink)',cursor:disabled?'not-allowed':'text'}}
+        onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}/>
+      {suffix&&<span style={{padding:'0 12px',color:'var(--bran)',fontSize:'13px',fontFamily:'var(--font-mono)',background:'var(--crumb)',alignSelf:'stretch',display:'flex',alignItems:'center',borderLeft:'1px solid var(--line)'}}>{suffix}</span>}
+    </div>
+    {(hint||error)&&<span style={{fontSize:'12px',color:error?'var(--babka-orange-deep)':'var(--bran)'}}>{error||hint}</span>}
+  </div>;
+}
+
+/* ── ProductCard ── */
+function ProductCard({ name, desc, price, badge, badgeVariant='wheat', available=true, accentColor='blue' }) {
+  const [hov,setHov]=useState(false);
+  const blobColors={blue:['#1F5AD9','#E6B23C','#DC7A33'],wheat:['#E6B23C','#1F5AD9','#DC7A33'],orange:['#DC7A33','#1F5AD9','#E6B23C']};
+  const [c1,c2,c3]=blobColors[accentColor]||blobColors.blue;
+  const bStyle={wheat:{bg:'var(--wheat)',color:'var(--ink)'},blue:{bg:'var(--babka-blue)',color:'#fff'},'blue-soft':{bg:'var(--babka-blue-soft)',color:'var(--babka-blue-deep)'},orange:{bg:'var(--babka-orange)',color:'var(--ink)'},crumb:{bg:'var(--crumb)',color:'var(--bran)',border:'1px solid var(--line)'}};
+  const bs=bStyle[badgeVariant]||bStyle.wheat;
+  return <div style={{fontFamily:'var(--font-body)',background:'var(--flour)',borderRadius:'var(--r-lg)',boxShadow:hov?'var(--shadow-lg)':'var(--shadow-md)',transform:hov?'translateY(-3px)':'none',transition:'box-shadow .3s,transform .3s',overflow:'hidden',width:'200px',opacity:available?1:.6}} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}>
+    <div style={{position:'relative',background:'var(--flour-warm)',height:'120px',overflow:'hidden'}}>
+      <svg style={{position:'absolute',inset:0,width:'100%',height:'100%'}} viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice" fill="none">
+        <path d="M10 -18 C46 -26 110 8 118 44 C126 80 90 112 56 120 C22 128 -18 104 -26 68 C-34 32 -18 -10 10 -18Z" fill={c1} opacity="0.9"/>
+        <path d="M136 16 C158 12 184 28 186 52 C188 76 168 96 146 100 C124 104 100 86 98 62 C96 40 116 20 136 16Z" fill={c2} opacity="0.85"/>
+        <path d="M162 74 C174 70 186 78 188 92 C190 106 178 116 166 116 C154 116 143 106 144 92 C145 80 152 77 162 74Z" fill={c3} opacity="0.8"/>
+      </svg>
+      {badge&&<span style={{position:'absolute',top:'10px',left:'10px',background:bs.bg,color:bs.color,border:bs.border,fontFamily:'var(--font-body)',fontWeight:700,fontSize:'10px',letterSpacing:'.12em',textTransform:'uppercase',padding:'3px 9px',borderRadius:'var(--r-pill)'}}>{badge}</span>}
+    </div>
+    <div style={{padding:'14px 16px 18px',display:'flex',flexDirection:'column',gap:'6px'}}>
+      <div style={{fontFamily:'var(--font-display)',fontWeight:900,fontSize:'19px',lineHeight:1.1,color:'var(--ink)',letterSpacing:'-.2px'}}>{name}</div>
+      {desc&&<div style={{fontSize:'12px',color:'var(--ink-soft)',lineHeight:1.4}}>{desc}</div>}
+      <div style={{fontFamily:'var(--font-mono)',fontSize:'18px',color:'var(--ink)',marginTop:'2px'}}>${price}<span style={{fontSize:'10px',color:'var(--bran)',marginLeft:'3px'}}>MXN</span></div>
+      <button disabled={!available} style={{background:available?'var(--wheat)':'var(--crumb)',color:available?'var(--ink)':'var(--bran)',border:'none',borderRadius:'var(--r-pill)',padding:'8px 0',fontFamily:'var(--font-body)',fontWeight:700,fontSize:'10px',letterSpacing:'.14em',textTransform:'uppercase',cursor:available?'pointer':'not-allowed',width:'100%',marginTop:'4px'}}>{available?'Ordenar':'Agotado'}</button>
+    </div>
+  </div>;
+}
+
+/* ── Card showcase ── */
+function Showcase() {
+  return (
+    <div>
+      <div className="sec-label">Buttons</div>
+      <div className="row">
+        <Button variant="primary">Ordenar ahora</Button>
+        <Button variant="secondary">Ver menú</Button>
+        <Button variant="ghost">Más info</Button>
+        <Button variant="orange">¡Hoy!</Button>
+        <Button variant="subtle">Cancelar</Button>
+        <Button variant="primary" disabled>Agotado</Button>
+        <Button variant="primary" loading>Procesando</Button>
+      </div>
+      <div className="row" style={{marginTop:'8px'}}>
+        <Button variant="primary" size="sm">sm</Button>
+        <Button variant="primary" size="md">md</Button>
+        <Button variant="primary" size="lg">lg</Button>
+      </div>
+
+      <hr className="divider"/>
+
+      <div className="sec-label">Badges</div>
+      <div className="row">
+        <Badge variant="wheat">Pan de hoy</Badge>
+        <Badge variant="blue">Disponible</Badge>
+        <Badge variant="blue-soft">Masa madre</Badge>
+        <Badge variant="orange">¡Último!</Badge>
+        <Badge variant="crust">Sin gluten</Badge>
+        <Badge variant="crumb" dot>Agotado</Badge>
+        <Badge variant="ink">Especial</Badge>
+      </div>
+
+      <hr className="divider"/>
+
+      <div className="sec-label">Inputs</div>
+      <div style={{display:'flex',gap:'14px',flexWrap:'wrap',alignItems:'flex-start'}}>
+        <div style={{width:'180px'}}><Input label="Nombre" placeholder="Lucía Dzul"/></div>
+        <div style={{width:'150px'}}><Input label="Precio" prefix="$" suffix="MXN" type="number" placeholder="0"/></div>
+        <div style={{width:'180px'}}><Input label="Correo" error="Correo inválido" value="no@"/></div>
+        <div style={{width:'160px'}}><Input label="Código" disabled value="BABKA-001"/></div>
+      </div>
+
+      <hr className="divider"/>
+
+      <div className="sec-label">Product Cards</div>
+      <div className="row" style={{alignItems:'flex-start'}}>
+        <ProductCard name="Pan de Caja" desc="Masa madre, corteza crujiente." price={85} badge="Pan de hoy" badgeVariant="wheat" accentColor="blue" available={true}/>
+        <ProductCard name="Focaccia" desc="Aceite de oliva y romero." price={95} badge="Especial" badgeVariant="orange" accentColor="orange" available={true}/>
+        <ProductCard name="Babka dulce" price={110} badge="Agotado" badgeVariant="crumb" accentColor="wheat" available={false}/>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Showcase/>);
+</script>
+</body>
+</html>

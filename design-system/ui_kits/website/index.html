@@ -1,0 +1,383 @@
+<!-- @dsCard group="Website" viewport="1200x820" name="Babka — Sitio web" subtitle="Prototipo interactivo del sitio principal" -->
+<!-- @startingPoint section="Website" subtitle="Landing page completa — hero, menú, sobre nosotros" viewport="1200x820" -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BABKA — Pan de masa madre · Mérida</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500;1,9..144,900&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+/* ── Tokens ─────────────────────────────────────────────────────────────── */
+:root {
+  --babka-blue:#1F5AD9; --babka-blue-deep:#143F9E; --babka-blue-soft:#D5E2FB;
+  --wheat:#E6B23C; --wheat-deep:#C9912A; --wheat-light:#F6E5A9;
+  --babka-orange:#DC7A33; --babka-orange-deep:#BC5F1F;
+  --flour:#FFFFFF; --flour-warm:#FCFAF4; --crumb:#F4EEE1;
+  --crust:#9C6B3F; --bran:#8A7E6B; --line:#E8E0CF;
+  --ink:#1A1714; --ink-soft:#3A352E;
+  --r-sm:10px; --r-md:18px; --r-lg:28px; --r-pill:999px;
+  --shadow-sm:0 1px 4px 0 rgba(26,23,20,.07),0 1px 2px -1px rgba(26,23,20,.05);
+  --shadow-md:0 4px 12px 0 rgba(26,23,20,.08),0 2px 4px -2px rgba(26,23,20,.06);
+  --shadow-lg:0 8px 28px 0 rgba(26,23,20,.10),0 4px 8px -4px rgba(26,23,20,.07);
+  --shadow-xl:0 20px 48px 0 rgba(26,23,20,.12),0 8px 16px -8px rgba(26,23,20,.08);
+  --ease-out:cubic-bezier(.2,.8,.2,1);
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono','Courier New',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-body);background:var(--flour-warm);color:var(--ink);-webkit-font-smoothing:antialiased;}
+img,svg{display:block;}
+
+.nav{position:sticky;top:0;z-index:100;background:rgba(252,250,244,.93);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);}
+.nav-inner{max-width:1100px;margin:0 auto;padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;}
+.nav-wordmark{font-family:var(--font-display);font-weight:900;font-style:italic;font-size:28px;color:var(--babka-blue);letter-spacing:-.5px;text-decoration:none;}
+.nav-links{display:flex;gap:32px;list-style:none;}
+.nav-links a{font-size:13px;font-weight:500;color:var(--ink-soft);text-decoration:none;transition:color .2s;}
+.nav-links a:hover{color:var(--babka-blue);}
+
+.section{max-width:1100px;margin:0 auto;padding:0 32px;}
+
+.hero{min-height:88vh;display:flex;align-items:center;position:relative;overflow:hidden;background:var(--flour);}
+.hero-blobs{position:absolute;inset:0;pointer-events:none;}
+.hero-content{position:relative;z-index:2;max-width:600px;}
+.hero-badge{display:inline-flex;align-items:center;background:var(--wheat);color:var(--ink);border-radius:var(--r-pill);padding:6px 16px;font-family:var(--font-body);font-weight:700;font-size:11px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:24px;}
+.hero-title{font-family:var(--font-display);font-weight:900;font-style:italic;font-size:clamp(56px,8vw,96px);color:var(--babka-blue);line-height:.95;letter-spacing:-2px;margin-bottom:24px;}
+.hero-lede{font-size:18px;line-height:1.65;color:var(--ink-soft);margin-bottom:32px;max-width:480px;}
+.hero-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:40px;}
+.chip{background:var(--crumb);border:1px solid var(--line);border-radius:var(--r-pill);padding:6px 14px;font-size:12px;font-weight:500;color:var(--ink-soft);}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;}
+
+.horario-bar{background:var(--ink);color:#fff;padding:14px 0;}
+.horario-inner{max-width:1100px;margin:0 auto;padding:0 32px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
+.horario-item{display:flex;align-items:center;gap:8px;font-size:13px;}
+.horario-dot{width:6px;height:6px;border-radius:50%;background:var(--wheat);flex-shrink:0;}
+
+.menu-section{padding:96px 0;background:var(--flour-warm);}
+.section-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:48px;gap:16px;}
+.section-title{font-family:var(--font-display);font-weight:900;font-size:40px;color:var(--ink);letter-spacing:-1px;line-height:1.1;}
+.section-sub{font-size:13px;color:var(--bran);}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:24px;}
+
+/* Product card */
+.pcard{background:var(--flour);border-radius:var(--r-lg);box-shadow:var(--shadow-md);overflow:hidden;transition:transform .3s var(--ease-out),box-shadow .3s var(--ease-out);cursor:pointer;}
+.pcard-header{height:150px;position:relative;overflow:hidden;}
+.pcard-illus{position:absolute;bottom:10px;right:12px;width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(26,23,20,.18));z-index:2;transition:transform .3s var(--ease-out);}
+.pcard:hover .pcard-illus{transform:rotate(-6deg) scale(1.08) translateY(-3px);}
+.pcard-badge-el{position:absolute;top:12px;left:12px;z-index:3;background:var(--wheat);color:var(--ink);border-radius:var(--r-pill);padding:4px 10px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;}
+.pcard-badge-el.blue{background:var(--babka-blue);color:#fff;}
+.pcard-badge-el.crumb{background:var(--crumb);color:var(--bran);border:1px solid var(--line);}
+.pcard-body{padding:16px 18px 20px;}
+.pcard-unit{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--bran);margin-bottom:6px;}
+.pcard-name{font-family:var(--font-display);font-weight:900;font-size:22px;color:var(--ink);letter-spacing:-.3px;line-height:1.1;margin-bottom:6px;}
+.pcard-desc{font-size:13px;color:var(--ink-soft);line-height:1.5;margin-bottom:12px;}
+.pcard-price{font-family:var(--font-mono);font-size:20px;color:var(--ink);margin-bottom:12px;}
+.pcard-price span{font-size:11px;color:var(--bran);margin-left:3px;}
+.pcard-btn{width:100%;background:var(--wheat);color:var(--ink);border:none;border-radius:var(--r-pill);padding:9px 0;font-family:var(--font-body);font-weight:700;font-size:11px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .2s;}
+.pcard-btn:hover{background:var(--wheat-deep);}
+.pcard-btn.sold{background:var(--crumb);color:var(--bran);cursor:not-allowed;}
+
+.about-section{padding:96px 0;background:var(--flour);}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;}
+.about-tag{display:inline-block;background:var(--babka-blue-soft);color:var(--babka-blue-deep);border-radius:var(--r-pill);padding:5px 14px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px;}
+.about-title{font-family:var(--font-display);font-weight:900;font-size:42px;color:var(--ink);letter-spacing:-1px;line-height:1.1;margin-bottom:20px;}
+.about-body{font-size:16px;color:var(--ink-soft);line-height:1.75;margin-bottom:16px;}
+.stat-num{font-family:var(--font-display);font-weight:900;font-style:italic;font-size:36px;color:var(--babka-blue);line-height:1;display:block;}
+.stat-label{font-size:12px;color:var(--bran);font-weight:500;}
+
+.location-section{padding:80px 0;background:var(--crumb);}
+.location-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+.location-map{background:var(--line);border-radius:var(--r-lg);height:280px;display:flex;align-items:center;justify-content:center;color:var(--bran);font-size:13px;font-family:var(--font-mono);}
+
+.footer{background:var(--ink);padding:56px 0 32px;}
+.footer-inner{max-width:1100px;margin:0 auto;padding:0 32px;}
+.footer-top{display:flex;justify-content:space-between;gap:48px;margin-bottom:48px;flex-wrap:wrap;}
+.footer-wordmark{font-family:var(--font-display);font-weight:900;font-style:italic;font-size:42px;color:var(--babka-blue);letter-spacing:-1px;line-height:1;display:block;margin-bottom:8px;}
+.footer-tagline{font-size:12px;color:rgba(255,255,255,.4);letter-spacing:.06em;}
+.footer-col-title{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:16px;}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:10px;}
+.footer-links a{font-size:14px;color:rgba(255,255,255,.7);text-decoration:none;transition:color .2s;}
+.footer-links a:hover{color:#fff;}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.footer-mono{font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,.25);}
+
+.modal-backdrop{position:fixed;inset:0;background:rgba(26,23,20,.6);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px;}
+.modal{background:var(--flour);border-radius:var(--r-lg);box-shadow:var(--shadow-xl);padding:40px;max-width:460px;width:100%;position:relative;}
+.modal-close{position:absolute;top:16px;right:16px;background:var(--crumb);border:none;border-radius:var(--r-pill);width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--bran);transition:background .2s;}
+.modal-close:hover{background:var(--line);}
+.modal-title{font-family:var(--font-display);font-weight:900;font-size:28px;color:var(--ink);letter-spacing:-.5px;margin-bottom:6px;}
+.modal-sub{font-size:13px;color:var(--bran);margin-bottom:28px;}
+.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.form-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);}
+.form-input{background:var(--flour-warm);border:1.5px solid var(--line);border-radius:var(--r-md);padding:10px 14px;font-family:var(--font-body);font-size:15px;color:var(--ink);outline:none;transition:border-color .2s,box-shadow .2s;}
+.form-input:focus{border-color:var(--babka-blue);box-shadow:0 0 0 3px var(--babka-blue-soft);}
+.form-submit{width:100%;background:var(--wheat);color:var(--ink);border:none;border-radius:var(--r-pill);padding:13px 0;font-family:var(--font-body);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:background .2s,transform .15s;}
+.form-submit:hover{background:var(--wheat-deep);transform:translateY(-1px);}
+.form-submit:active{transform:scale(.98);}
+
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:var(--r-pill);padding:12px 24px;font-size:14px;font-weight:500;box-shadow:var(--shadow-xl);z-index:300;white-space:nowrap;animation:toast-in .3s var(--ease-out);}
+@keyframes toast-in{from{opacity:0;transform:translateX(-50%) translateY(12px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+@keyframes babka-spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+/* ── Iconify CDN helper — Fluent Emoji Flat (MIT license) ─────────────── */
+const ICON_CDN = 'https://api.iconify.design/fluent-emoji-flat';
+function BreadIcon({ name, size=80, style={} }) {
+  return <img src={`${ICON_CDN}/${name}.svg`} width={size} height={size}
+    style={{objectFit:'contain',...style}} alt={name} loading="lazy"/>;
+}
+
+/* ── Inline Button ─────────────────────────────────────────────────────── */
+function Button({ variant='primary', size='md', disabled=false, loading=false, children, onClick }) {
+  const [hov,setHov]=useState(false), [pressed,setPressed]=useState(false);
+  const sizes={sm:{fontSize:'11px',padding:'7px 16px',height:'32px'},md:{fontSize:'12px',padding:'10px 24px',height:'40px'},lg:{fontSize:'13px',padding:'13px 32px',height:'48px'}};
+  const vMap={
+    primary:{background:hov?'var(--wheat-deep)':'var(--wheat)',color:'var(--ink)'},
+    secondary:{background:hov?'var(--babka-blue-deep)':'var(--babka-blue)',color:'#fff'},
+    ghost:{background:hov?'var(--ink)':'transparent',color:hov?'#fff':'var(--ink)',border:'1.5px solid var(--ink)'},
+  };
+  return <button type="button" style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:'8px',fontFamily:'var(--font-body)',fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',border:'none',borderRadius:'var(--r-pill)',cursor:disabled||loading?'not-allowed':'pointer',transition:'background .3s,color .3s,transform .15s',whiteSpace:'nowrap',outline:'none',opacity:disabled?.45:1,transform:pressed?'scale(.97)':hov?'translateY(-1px)':'none',...sizes[size],...(vMap[variant]||vMap.primary)}} disabled={disabled} onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>{setHov(false);setPressed(false);}} onMouseDown={()=>setPressed(true)} onMouseUp={()=>setPressed(false)}>
+    {loading&&<span style={{width:'14px',height:'14px',border:'2px solid currentColor',borderTopColor:'transparent',borderRadius:'50%',display:'inline-block',animation:'babka-spin .7s linear infinite'}}/>}
+    {children}
+  </button>;
+}
+
+/* ── Products data ─────────────────────────────────────────────────────── */
+const PRODUCTS = [
+  { id:1, name:'Pan de Caja',  desc:'Masa madre de largo proceso, corteza crujiente y miga abierta.',  price:85,  badge:'Pan de hoy', badgeCls:'',      bg:'#D5E2FB', icon:'bread',          available:true  },
+  { id:2, name:'Focaccia',     desc:'Aceite de oliva, romero fresco y sal gruesa de Yucatán.',         price:95,  badge:'Especial',   badgeCls:'',      bg:'#F6E5A9', icon:'flatbread',      available:true  },
+  { id:3, name:'Integral',     desc:'Trigo integral de molido local. Más sabor, más fibra.',           price:90,  badge:null,         badgeCls:'',      bg:'#F4EEE1', icon:'baguette-bread', available:true  },
+  { id:4, name:'Babka dulce',  desc:'Masa con canela y piloncillo. Solo fines de semana.',             price:110, badge:'Agotado',    badgeCls:'crumb', bg:'#F4EEE1', icon:'croissant',      available:false },
+  { id:5, name:'Ciabatta',     desc:'Alveolado abierto, perfecta para tortas y sándwiches.',          price:75,  badge:'Pan de hoy', badgeCls:'',      bg:'#D5E2FB', icon:'bagel',           available:true  },
+  { id:6, name:'Baguette',     desc:'Corteza dorada y crujiente. Lista a las 8am.',                   price:65,  badge:'Pan de hoy', badgeCls:'blue',  bg:'#1F5AD9', icon:'baguette-bread', available:true  },
+];
+
+/* ── Blob background shapes ────────────────────────────────────────────── */
+function CardBlobs({ bg, darkBlob }) {
+  return (
+    <svg style={{position:'absolute',inset:0,width:'100%',height:'100%'}} viewBox="0 0 240 150" preserveAspectRatio="xMidYMid slice" fill="none">
+      <rect width="240" height="150" fill={bg}/>
+      <path d="M-20 -20 C30 -40 110 0 120 50 C130 100 80 150 30 158 C-20 166 -60 130 -70 80 C-80 30 -70 0 -20 -20Z" fill="rgba(255,255,255,0.18)"/>
+      <path d="M160 80 C190 70 230 90 234 120 C238 150 210 170 182 168 C154 166 134 144 136 118 C138 94 132 88 160 80Z" fill="rgba(0,0,0,0.06)"/>
+    </svg>
+  );
+}
+
+function ProductCardItem({ product, onOrder }) {
+  const [hov,setHov]=useState(false);
+  const isDark = product.bg === '#1F5AD9';
+  return (
+    <div className="pcard" style={{transform:hov?'translateY(-4px)':'none',boxShadow:hov?'var(--shadow-lg)':'var(--shadow-md)',opacity:product.available?1:.65}}
+      onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}>
+      <div className="pcard-header" style={{background:product.bg}}>
+        <CardBlobs bg={product.bg} darkBlob={isDark}/>
+        {product.badge && <span className={`pcard-badge-el ${product.badgeCls}`}>{product.badge}</span>}
+        <img
+          src={`${ICON_CDN}/${product.icon}.svg`}
+          className="pcard-illus"
+          alt={product.name}
+          width={80} height={80}
+        />
+      </div>
+      <div className="pcard-body">
+        <div className="pcard-unit">pieza</div>
+        <div className="pcard-name">{product.name}</div>
+        <div className="pcard-desc">{product.desc}</div>
+        <div className="pcard-price">${product.price}<span>MXN</span></div>
+        <button className={`pcard-btn${!product.available?' sold':''}`}
+          onClick={()=>product.available&&onOrder(product)} disabled={!product.available}>
+          {product.available?'Ordenar':'Agotado'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function OrderModal({ product, onClose, onSuccess }) {
+  const [name,setName]=useState(''), [phone,setPhone]=useState(''), [qty,setQty]=useState(1), [loading,setLoading]=useState(false);
+  function submit(e){ e.preventDefault(); setLoading(true); setTimeout(()=>{ setLoading(false); onSuccess(); },1400); }
+  return (
+    <div className="modal-backdrop" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <button className="modal-close" onClick={onClose}>✕</button>
+        <div className="modal-title">Ordenar</div>
+        <div className="modal-sub">{product.name} · ${product.price} MXN / pieza</div>
+        <form onSubmit={submit}>
+          <div className="form-group"><label className="form-label">Tu nombre *</label><input className="form-input" placeholder="e.g. Lucía Dzul" required value={name} onChange={e=>setName(e.target.value)}/></div>
+          <div className="form-group"><label className="form-label">WhatsApp *</label><input className="form-input" type="tel" placeholder="+52 999 000 0000" required value={phone} onChange={e=>setPhone(e.target.value)}/></div>
+          <div className="form-group"><label className="form-label">Cantidad</label><input className="form-input" type="number" min="1" max="10" value={qty} onChange={e=>setQty(e.target.value)}/></div>
+          <button className="form-submit" type="submit" disabled={loading}>
+            {loading?<span style={{display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'}}><span style={{width:'14px',height:'14px',border:'2px solid var(--ink)',borderTopColor:'transparent',borderRadius:'50%',display:'inline-block',animation:'babka-spin .7s linear infinite'}}></span>Enviando…</span>:`Confirmar — $${product.price*qty} MXN`}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [modal,setModal]=useState(null), [toast,setToast]=useState(null), [cart,setCart]=useState([]);
+  function handleSuccess(){ setCart(c=>[...c,modal]); const n=modal.name; setModal(null); setToast(`¡Pedido de ${n} confirmado!`); setTimeout(()=>setToast(null),3200); }
+  function scrollTo(id){ document.getElementById(id)?.scrollIntoView({behavior:'smooth'}); }
+
+  return (
+    <>
+      <nav className="nav">
+        <div className="nav-inner">
+          <a href="#" className="nav-wordmark">BABKA</a>
+          <ul className="nav-links">
+            <li><a href="#menu" onClick={e=>{e.preventDefault();scrollTo('menu');}}>Menú</a></li>
+            <li><a href="#about" onClick={e=>{e.preventDefault();scrollTo('about');}}>Nosotros</a></li>
+            <li><a href="#location" onClick={e=>{e.preventDefault();scrollTo('location');}}>Ubicación</a></li>
+          </ul>
+          <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
+            {cart.length>0&&<span style={{fontSize:'12px',color:'var(--bran)',fontFamily:'var(--font-mono)'}}>{cart.length} {cart.length===1?'pedido':'pedidos'}</span>}
+            <Button variant="primary" size="sm" onClick={()=>scrollTo('menu')}>Ver menú</Button>
+          </div>
+        </div>
+      </nav>
+
+      <div className="horario-bar">
+        <div className="horario-inner">
+          <div className="horario-item"><span className="horario-dot"></span><strong>Lun – Sáb</strong>&nbsp;<span style={{color:'rgba(255,255,255,.5)'}}>7am – 2pm</span></div>
+          <div className="horario-item"><span className="horario-dot"></span><strong>WhatsApp</strong>&nbsp;<span style={{color:'rgba(255,255,255,.5)'}}>+52 999 123 4567</span></div>
+          <div className="horario-item"><span className="horario-dot"></span><span style={{color:'rgba(255,255,255,.6)'}}>Mérida, Yucatán</span></div>
+        </div>
+      </div>
+
+      {/* HERO */}
+      <section className="hero">
+        <svg className="hero-blobs" viewBox="0 0 1200 700" fill="none" preserveAspectRatio="xMaxYMid slice">
+          <path d="M900 -40 C960 -60 1080 10 1100 100 C1120 190 1060 280 980 300 C900 320 800 260 790 170 C780 80 848 -20 900 -40Z" fill="#1F5AD9" opacity="0.9"/>
+          <path d="M1020 80 C1060 70 1110 100 1120 150 C1130 200 1098 240 1058 248 C1018 256 974 226 970 180 C966 136 986 88 1020 80Z" fill="#E6B23C" opacity="0.92"/>
+          <path d="M1060 200 C1082 192 1108 210 1112 236 C1116 262 1096 284 1072 286 C1048 288 1024 268 1024 244 C1024 222 1040 207 1060 200Z" fill="#DC7A33" opacity="0.88"/>
+          <path d="M700 -80 C820 -100 1050 20 1080 180 C1110 340 1020 520 880 580 C740 640 560 600 480 480 C400 360 440 160 540 60 C600 -10 640 -70 700 -80Z" fill="#1F5AD9" opacity="0.04"/>
+        </svg>
+        {/* Ilustraciones flotantes — img tags, no SVG image */}
+        <img src="https://api.iconify.design/fluent-emoji-flat/baguette-bread.svg" alt="baguette" style={{position:'absolute',right:'14%',top:'50%',transform:'translateY(-55%) rotate(12deg)',width:'200px',height:'200px',filter:'drop-shadow(0 12px 24px rgba(26,23,20,.2))',pointerEvents:'none',zIndex:1}}/>
+        <img src="https://api.iconify.design/fluent-emoji-flat/bread.svg" alt="bread" style={{position:'absolute',right:'6%',top:'28%',transform:'rotate(-8deg)',width:'110px',height:'110px',filter:'drop-shadow(0 8px 16px rgba(26,23,20,.18))',pointerEvents:'none',zIndex:1}}/>
+        <div className="section" style={{width:'100%'}}>
+          <div className="hero-content">
+            <div className="hero-badge">PAN DE HOY</div>
+            <h1 className="hero-title">BABKA</h1>
+            <p className="hero-lede">Panadería de masa madre y café de especialidad. Horneado cada mañana en Mérida, Yucatán.</p>
+            <div className="hero-chips">
+              <span className="chip">Masa madre</span>
+              <span className="chip">Sin aditivos</span>
+              <span className="chip">Ingredientes locales</span>
+              <span className="chip">Horneado hoy</span>
+            </div>
+            <div className="hero-actions">
+              <Button variant="primary" size="lg" onClick={()=>scrollTo('menu')}>Ver el menú de hoy</Button>
+              <Button variant="ghost" size="lg" onClick={()=>scrollTo('about')}>Conoce Babka</Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* MENÚ */}
+      <section className="menu-section" id="menu">
+        <div className="section">
+          <div className="section-header">
+            <h2 className="section-title">El pan de hoy</h2>
+            <span className="section-sub">Lunes 8 de junio · Disponibilidad limitada</span>
+          </div>
+          <div className="product-grid">
+            {PRODUCTS.map(p=><ProductCardItem key={p.id} product={p} onOrder={setModal}/>)}
+          </div>
+        </div>
+      </section>
+
+      {/* SOBRE */}
+      <section className="about-section" id="about">
+        <div className="section">
+          <div className="about-grid">
+            <div>
+              <span className="about-tag">Quiénes somos</span>
+              <h2 className="about-title">El rincón social de Mérida</h2>
+              <p className="about-body">Babka nació del amor al proceso lento. Nuestras masas fermentan durante horas, con levadura salvaje y trigo local. Sin apuros, sin atajos.</p>
+              <p className="about-body">Cada mañana horneamos en pequeñas cantidades para que el pan llegue fresco. Cuando se acaba, se acaba.</p>
+              <div style={{display:'flex',gap:'32px',marginTop:'32px'}}>
+                <div><span className="stat-num">5</span><span className="stat-label">Años horneando</span></div>
+                <div><span className="stat-num">48h</span><span className="stat-label">Fermentación</span></div>
+                <div><span className="stat-num">100%</span><span className="stat-label">Masa madre</span></div>
+              </div>
+            </div>
+            {/* Panel decorativo con varios panes */}
+            <div style={{position:'relative',height:'380px',background:'var(--crumb)',borderRadius:'var(--r-lg)',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}>
+              <svg style={{position:'absolute',inset:0,width:'100%',height:'100%'}} viewBox="0 0 440 380" fill="none">
+                <path d="M80 20 C180 -20 360 20 400 130 C440 240 380 380 260 410 C140 440 20 380 4 260 C-12 140 -20 60 80 20Z" fill="var(--wheat)" opacity="0.12"/>
+                <path d="M300 -10 C360 0 420 60 420 130 C420 200 370 260 300 270 C230 280 160 240 150 170 C140 100 180 30 230 10 C256 0 278 -18 300 -10Z" fill="var(--babka-blue)" opacity="0.07"/>
+              </svg>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'20px',padding:'32px',position:'relative',zIndex:1}}>
+                {['bread','baguette-bread','croissant','bagel'].map((icon,i)=>(
+                  <div key={icon} style={{background:'var(--flour)',borderRadius:'var(--r-lg)',padding:'20px',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'var(--shadow-md)',transition:'transform .3s var(--ease-out)'}}
+                    onMouseEnter={e=>e.currentTarget.style.transform='rotate(-4deg) scale(1.06)'}
+                    onMouseLeave={e=>e.currentTarget.style.transform='none'}>
+                    <img src={`${ICON_CDN}/${icon}.svg`} width={60} height={60} alt={icon}/>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* UBICACIÓN */}
+      <section className="location-section" id="location">
+        <div className="section">
+          <div className="location-grid">
+            <div>
+              <h2 className="section-title" style={{marginBottom:'16px'}}>Dónde encontrarnos</h2>
+              <p style={{fontSize:'16px',color:'var(--ink-soft)',lineHeight:'1.7',marginBottom:'24px'}}>Estamos en el corazón de Mérida. Ven, ordena tu pan y quédate a tomar un café.</p>
+              <div style={{display:'flex',flexDirection:'column',gap:'12px',marginBottom:'32px'}}>
+                {[['DIR','Calle 60 #500, Col. Centro, Mérida, Yucatán'],['TEL','+52 999 123 4567'],['HOR','Lunes – Sábado · 7am – 2pm']].map(([k,v])=>(
+                  <div key={k} style={{display:'flex',gap:'10px',alignItems:'flex-start'}}>
+                    <span style={{fontFamily:'var(--font-mono)',fontSize:'11px',color:'var(--bran)',marginTop:'2px',flexShrink:0}}>{k}</span>
+                    <span style={{fontSize:'15px',color:'var(--ink)'}}>{v}</span>
+                  </div>
+                ))}
+              </div>
+              <Button variant="secondary">Ver en Google Maps</Button>
+            </div>
+            <div className="location-map">mapa · Mérida, Yucatán</div>
+          </div>
+        </div>
+      </section>
+
+      <footer className="footer">
+        <div className="footer-inner">
+          <div className="footer-top">
+            <div><span className="footer-wordmark">BABKA</span><span className="footer-tagline">Pan de hoy · El rincón social de Mérida</span></div>
+            <div><div className="footer-col-title">Menú</div><ul className="footer-links"><li><a href="#menu">Pan de hoy</a></li><li><a href="#menu">Especiales</a></li><li><a href="#menu">Café</a></li></ul></div>
+            <div><div className="footer-col-title">Nosotros</div><ul className="footer-links"><li><a href="#about">El rincón</a></li><li><a href="#about">Nuestro proceso</a></li><li><a href="#location">Ubicación</a></li></ul></div>
+            <div><div className="footer-col-title">Contacto</div><ul className="footer-links"><li><a href="#">WhatsApp</a></li><li><a href="#">hola@babkamerida.com</a></li><li><a href="#">Instagram</a></li></ul></div>
+          </div>
+          <div className="footer-bottom">
+            <span className="footer-mono">© 2026 Babka · Mérida, Yucatán</span>
+            <span className="footer-mono">Fluent Emoji Flat (MIT) via Iconify · Fraunces · DM Sans</span>
+          </div>
+        </div>
+      </footer>
+
+      {modal&&<OrderModal product={modal} onClose={()=>setModal(null)} onSuccess={handleSuccess}/>}
+      {toast&&<div className="toast">✓ {toast}</div>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
