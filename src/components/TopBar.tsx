@@ -5,6 +5,7 @@ const PAGE_LABELS: Record<string, string> = {
   conciliaciones: 'Conciliaciones',
   hitl:           'Bandeja HITL',
   whatsapp:       'WhatsApp',
+  chat:           'Chat BABKA',
 }
 
 interface TopBarProps {

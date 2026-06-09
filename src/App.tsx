@@ -4,6 +4,7 @@ import { Resumen } from './pages/Resumen'
 import { Conciliaciones } from './pages/Conciliaciones'
 import { HITL } from './pages/HITL'
 import { WhatsAppSim } from './pages/WhatsAppSim'
+import { AgentChat } from './pages/AgentChat'
 import type { BranchId } from './types'
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
       {page === 'conciliaciones' && <Conciliaciones initialBranchId={selectedBranchId} />}
       {page === 'hitl'           && <HITL />}
       {page === 'whatsapp'       && <WhatsAppSim />}
+      {page === 'chat'           && <AgentChat />}
     </Layout>
   )
 }

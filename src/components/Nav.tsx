@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { id: 'conciliaciones', label: 'Conciliaciones', icon: '⊞' },
   { id: 'hitl',           label: 'Bandeja HITL',   icon: '⊡' },
   { id: 'whatsapp',       label: 'WhatsApp',       icon: '◎' },
+  { id: 'chat',           label: 'Chat BABKA',     icon: '⬡' },
 ]
 
 export function Nav({ page, onNavigate, collapsed = false }: NavProps) {

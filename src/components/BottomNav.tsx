@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { id: 'conciliaciones', label: 'Cierres',  icon: '⊞' },
   { id: 'hitl',           label: 'HITL',     icon: '⊡' },
   { id: 'whatsapp',       label: 'WhatsApp', icon: '◎' },
+  { id: 'chat',           label: 'Chat',     icon: '⬡' },
 ]
 
 interface BottomNavProps {
