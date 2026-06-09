@@ -98,7 +98,7 @@ function HITLCard({ request, expanded, onToggle, onApprove, onDismiss, isMobile 
   onApprove: (id: string) => void; onDismiss: (id: string) => void; isMobile: boolean
 }) {
   const branch = BRANCHES.find(b => b.id === request.branchId)!
-  const pad = isMobile ? 'var(--space-4)' : 'var(--space-5) var(--space-6)'
+  const pad = isMobile ? 'var(--space-4)' : 'var(--space-4) var(--space-6)'
 
   return (
     <div style={{

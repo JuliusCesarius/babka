@@ -152,7 +152,7 @@ function RecCard({ rec, isSelected, onClick }: {
       onClick={onClick}
       style={{
         background: isSelected ? 'var(--babka-blue)' : 'var(--flour)',
-        borderRadius: 'var(--r-lg)', padding: 'var(--space-4) var(--space-5)',
+        borderRadius: 'var(--r-lg)', padding: 'var(--space-4) var(--space-6)',
         cursor: 'pointer', boxShadow: 'var(--shadow-md)',
         transition: 'all var(--transition)',
         border: '2px solid', borderColor: isSelected ? 'var(--babka-blue)' : 'transparent',
