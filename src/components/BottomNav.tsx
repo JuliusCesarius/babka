@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { HITL_REQUESTS } from '../fixtures/branches'
 
 const NAV_ITEMS = [
-  { id: 'resumen',        label: 'Resumen',  icon: '◈' },
-  { id: 'conciliaciones', label: 'Cierres',  icon: '⊞' },
-  { id: 'hitl',           label: 'HITL',     icon: '⊡' },
-  { id: 'whatsapp',       label: 'WhatsApp', icon: '◎' },
-  { id: 'chat',           label: 'Chat',     icon: '⬡' },
+  { id: 'resumen',        label: 'Resumen',   icon: '◈' },
+  { id: 'conciliaciones', label: 'Cierres',   icon: '⊞' },
+  { id: 'calendario',     label: 'Calendario',icon: '▦' },
+  { id: 'hitl',           label: 'HITL',      icon: '⊡' },
+  { id: 'chat',           label: 'Clarisa AI',icon: '✦' },
 ]
 
 interface BottomNavProps {

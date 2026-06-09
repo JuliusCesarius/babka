@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Layout } from './components/Layout'
 import { Resumen } from './pages/Resumen'
 import { Conciliaciones } from './pages/Conciliaciones'
+import { Calendario } from './pages/Calendario'
 import { HITL } from './pages/HITL'
 import { WhatsAppSim } from './pages/WhatsAppSim'
 import { AgentChat } from './pages/AgentChat'
@@ -20,6 +21,7 @@ export default function App() {
     <Layout page={page} onNavigate={navigate}>
       {page === 'resumen'        && <Resumen onNavigate={navigate} />}
       {page === 'conciliaciones' && <Conciliaciones initialBranchId={selectedBranchId} />}
+      {page === 'calendario'     && <Calendario />}
       {page === 'hitl'           && <HITL />}
       {page === 'whatsapp'       && <WhatsAppSim />}
       {page === 'chat'           && <AgentChat />}

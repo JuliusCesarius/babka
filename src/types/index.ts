@@ -112,3 +112,29 @@ export interface WhatsAppConversation {
   contactPhone: string
   messages: WhatsAppMessage[]
 }
+
+export interface DailySnapshot {
+  date: string
+  branchId: BranchId
+  status: ReconciliationStatus
+  light: TrafficLight
+  diferencia: number
+  totalUnits: number
+}
+
+export interface BakeryOrderItem {
+  sku: string
+  productName: string
+  quantity: number
+}
+
+export interface BakeryOrder {
+  id: string
+  date: string
+  orderDate: string
+  supplier: string
+  items: BakeryOrderItem[]
+  totalPiezas: number
+  status: 'pendiente' | 'confirmado' | 'entregado'
+  notes?: string
+}

@@ -88,10 +88,10 @@ export function AgentChat() {
               fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-black)',
               fontSize: isMobile ? 'var(--text-lg)' : 'var(--text-xl)', color: 'var(--ink)',
               lineHeight: 1,
-            }}>BABKA</div>
+            }}>Clarisa AI</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
               <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#22C55E' }} />
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--bran)' }}>En línea · sin backend (Fase 0)</span>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--bran)' }}>En línea · monitoreando 5 sucursales</span>
             </div>
           </div>
         </div>
@@ -226,7 +226,7 @@ function MessageBubble({ message, isMobile }: { message: ChatMessage; isMobile: 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginLeft: '4px' }}>
           <AgentAvatar size={20} />
           <span style={{ fontSize: '11px', color: 'var(--bran)', fontFamily: 'var(--font-body)', fontWeight: 'var(--weight-medium)' }}>
-            BABKA
+            Clarisa AI
           </span>
         </div>
       )}
@@ -294,31 +294,51 @@ function InlineCard({ card, isMobile }: { card: ChatCard; isMobile: boolean }) {
   if (card.type === 'hitl-alert') {
     return (
       <div style={{
-        maxWidth: maxW,
-        background: 'rgba(220,122,51,0.1)',
+        maxWidth: maxW, width: '100%',
+        background: 'rgba(220,122,51,0.08)',
         borderRadius: 'var(--r-lg)',
-        padding: 'var(--space-4)',
         border: '1.5px solid rgba(220,122,51,0.25)',
-        display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
+        overflow: 'hidden',
       }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3) var(--space-4)' }}>
+          <div style={{
+            width: '36px', height: '36px', borderRadius: 'var(--r-md)', flexShrink: 0,
+            background: 'var(--babka-orange)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontFamily: 'var(--font-mono)', fontWeight: 'var(--weight-bold)', fontSize: 'var(--text-sm)',
+          }}>{card.pending}</div>
+          <div>
+            <div style={{ fontWeight: 'var(--weight-bold)', fontSize: 'var(--text-sm)', color: 'var(--ink)' }}>
+              Items pendientes de aprobación
+            </div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--bran)', marginTop: '2px' }}>
+              Bandeja HITL · requiere tu revisión
+            </div>
+          </div>
+        </div>
         <div style={{
-          width: '36px', height: '36px', borderRadius: 'var(--r-md)', flexShrink: 0,
-          background: 'var(--babka-orange)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', fontFamily: 'var(--font-mono)', fontWeight: 'var(--weight-bold)', fontSize: 'var(--text-sm)',
-        }}>{card.pending}</div>
-        <div>
-          <div style={{ fontWeight: 'var(--weight-bold)', fontSize: 'var(--text-sm)', color: 'var(--ink)' }}>
-            Items pendientes de aprobación
-          </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--bran)', marginTop: '2px' }}>
-            Bandeja HITL · requiere revisión de Clarisa
-          </div>
+          borderTop: '1px solid rgba(220,122,51,0.2)',
+          padding: 'var(--space-2) var(--space-3)',
+          display: 'flex', gap: 'var(--space-2)',
+        }}>
+          <ActionChip label="Ver bandeja →" primary />
+          <ActionChip label="Resumir ítems" />
         </div>
       </div>
     )
   }
 
   return null
+}
+
+function ActionChip({ label, primary }: { label: string; primary?: boolean }) {
+  return (
+    <button style={{
+      padding: '5px 12px', borderRadius: 'var(--r-pill)', border: 'none', cursor: 'pointer',
+      background: primary ? 'var(--babka-orange)' : 'rgba(220,122,51,0.12)',
+      color: primary ? '#fff' : 'var(--babka-orange-deep)',
+      fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 'var(--weight-bold)',
+    }}>{label}</button>
+  )
 }
 
 function Stat({ label, value, mono, accent }: { label: string; value: string; mono?: boolean; accent?: boolean }) {
@@ -346,11 +366,7 @@ function AgentAvatar({ size }: { size: number }) {
       background: 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center',
       flexShrink: 0,
     }}>
-      <span style={{
-        fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-black)',
-        fontStyle: 'italic', fontSize: size * 0.48,
-        color: 'var(--wheat)', lineHeight: 1,
-      }}>B</span>
+      <span style={{ fontSize: size * 0.44, color: 'var(--wheat)', lineHeight: 1 }}>✦</span>
     </div>
   )
 }

@@ -3,9 +3,10 @@ import { HITL_REQUESTS } from '../fixtures/branches'
 const PAGE_LABELS: Record<string, string> = {
   resumen:        'Resumen',
   conciliaciones: 'Conciliaciones',
+  calendario:     'Calendario',
   hitl:           'Bandeja HITL',
   whatsapp:       'WhatsApp',
-  chat:           'Chat BABKA',
+  chat:           'Clarisa AI',
 }
 
 interface TopBarProps {

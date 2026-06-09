@@ -22,14 +22,20 @@ export const INITIAL_MESSAGES: ChatMessage[] = [
   {
     id: 'init-1',
     role: 'agent',
-    content: 'Hola Clarisa. Soy BABKA. Hoy son las 9:18 pm y tengo el resumen del día listo. ¿Qué necesitas revisar?',
+    content: 'Hola Clarisa. Son las 9:18 pm — procesé el cierre de hoy. Tengo el resumen listo.',
     timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
   },
   {
     id: 'init-2',
     role: 'agent',
-    content: '3 sucursales cerraron sin problemas. Norte tiene un descuadre de 4 piezas esperando tu aprobación. Marista aún no reportó.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 10 + 800).toISOString(),
+    content: 'Centro ✓  Montes ✓  Slowfood ✓\nNorte ⚠  Descuadre +4 pzas · esperando tu aprobación\nMarista 🔴  Sin reporte de cierre',
+    timestamp: new Date(Date.now() - 1000 * 60 * 10 + 600).toISOString(),
+  },
+  {
+    id: 'init-3',
+    role: 'agent',
+    content: 'Hay 4 ítems en la bandeja HITL que requieren tu revisión. ¿Los vemos ahora o prefieres revisar primero alguna sucursal?',
+    timestamp: new Date(Date.now() - 1000 * 60 * 10 + 1200).toISOString(),
     card: {
       type: 'hitl-alert',
       pending: 4,
