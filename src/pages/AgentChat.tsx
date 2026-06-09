@@ -3,6 +3,7 @@ import { INITIAL_MESSAGES, getSimulatedResponse } from '../fixtures/chat'
 import { useBreakpoint } from '../hooks/useBreakpoint'
 import type { ChatMessage, ChatCard } from '../fixtures/chat'
 import type { UserRole } from '../App'
+import type { HITLRequest } from '../types'
 
 const OPS_QUICK_ACTIONS = [
   'Resumen del día',
@@ -37,7 +38,11 @@ const EXEC_INITIAL_MESSAGES: ChatMessage[] = [
 
 let msgCounter = 100
 
-export function AgentChat({ role = 'ops' }: { role?: UserRole }) {
+export function AgentChat({ role = 'ops', pinnedContext, onClearContext }: {
+  role?: UserRole
+  pinnedContext?: HITLRequest | null
+  onClearContext?: () => void
+}) {
   const { isMobile } = useBreakpoint()
   const isExec = role === 'exec'
   const QUICK_ACTIONS = isExec ? EXEC_QUICK_ACTIONS : OPS_QUICK_ACTIONS
@@ -142,6 +147,11 @@ export function AgentChat({ role = 'ops' }: { role?: UserRole }) {
         <div ref={bottomRef} />
       </div>
 
+      {/* Pinned context card */}
+      {pinnedContext && (
+        <PinnedContextCard request={pinnedContext} onClear={onClearContext ?? (() => {})} isMobile={isMobile} />
+      )}
+
       {/* Quick actions */}
       <div style={{
         padding: `var(--space-3) ${isMobile ? 'var(--space-4)' : 'var(--space-6)'} 0`,
@@ -236,6 +246,76 @@ export function AgentChat({ role = 'ops' }: { role?: UserRole }) {
           ↑
         </button>
       </form>
+    </div>
+  )
+}
+
+const HITL_TYPE_LABELS: Record<string, string> = {
+  descuadre: 'Descuadre', traspaso: 'Traspaso', 'alias-desconocido': 'Alias desconocido',
+  'merma-alta': 'Merma alta', 'auto-cierre': 'Auto-cierre',
+}
+
+function PinnedContextCard({ request, onClear, isMobile }: {
+  request: HITLRequest; onClear: () => void; isMobile: boolean
+}) {
+  const pad = isMobile ? 'var(--space-3) var(--space-4)' : 'var(--space-3) var(--space-6)'
+  return (
+    <div style={{
+      padding: pad,
+      background: 'rgba(230,178,60,0.06)',
+      borderTop: '1px solid var(--line)',
+      borderBottom: '1px solid rgba(230,178,60,0.3)',
+      flexShrink: 0,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
+        {/* Pin icon */}
+        <div style={{
+          width: '28px', height: '28px', borderRadius: 'var(--r-md)', flexShrink: 0,
+          background: 'rgba(230,178,60,0.2)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', fontSize: '13px', color: 'var(--wheat-deep)',
+        }}>⊡</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: '3px', flexWrap: 'wrap' }}>
+            <span style={{
+              fontSize: '10px', fontWeight: 'var(--weight-bold)', letterSpacing: '0.06em',
+              textTransform: 'uppercase', color: 'var(--wheat-deep)',
+              fontFamily: 'var(--font-body)',
+            }}>
+              Contexto activo
+            </span>
+            <span style={{
+              fontSize: '10px', background: 'rgba(230,178,60,0.2)', color: 'var(--wheat-deep)',
+              padding: '1px 8px', borderRadius: 'var(--r-pill)', fontFamily: 'var(--font-body)',
+              fontWeight: 'var(--weight-medium)',
+            }}>
+              {HITL_TYPE_LABELS[request.type] ?? request.type}
+            </span>
+          </div>
+          <div style={{
+            fontSize: 'var(--text-xs)', color: 'var(--ink)', fontWeight: 'var(--weight-medium)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {request.description}
+          </div>
+          {request.agentMessage && (
+            <div style={{
+              fontSize: '11px', color: 'var(--bran)', marginTop: '2px',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {request.agentMessage}
+            </div>
+          )}
+        </div>
+        <button
+          onClick={onClear}
+          title="Quitar contexto"
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--bran)', fontSize: '16px', lineHeight: 1,
+            padding: '2px 4px', flexShrink: 0,
+          }}
+        >×</button>
+      </div>
     </div>
   )
 }
