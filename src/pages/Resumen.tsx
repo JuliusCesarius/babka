@@ -73,8 +73,17 @@ function OperativoResumen({ onNavigate }: { onNavigate: ResumenProps['onNavigate
             }}>
               Resumen operativo · SOCO Mérida
             </div>
-            <h1 style={{ fontSize: isMobile ? 'var(--text-xl)' : 'var(--text-3xl)', lineHeight: 1.1 }}>
-              Conciliaciones
+            <h1 style={{ fontSize: isMobile ? 'var(--text-lg)' : 'var(--text-xl)', lineHeight: 1.2, fontFamily: 'var(--font-body)', fontWeight: 'var(--weight-black)', color: 'var(--ink)' }}>
+              {cerradas === rows.length
+                ? `Todo cerrado · ${cerradas} sucursales ✓`
+                : descuadre > 0 && pendientes > 0
+                  ? `${cerradas} cerradas · ${descuadre} descuadre · ${pendientes} sin reportar`
+                  : descuadre > 0
+                    ? `${cerradas} de ${rows.length} cerradas · ${descuadre} con descuadre`
+                    : pendientes > 0
+                      ? `${cerradas} de ${rows.length} cerradas · ${pendientes} sin reportar`
+                      : `${cerradas} de ${rows.length} cerradas`
+              }
             </h1>
           </div>
           <DatePicker value={filter} onChange={setFilter} />
@@ -135,18 +144,34 @@ function DatePicker({ value, onChange }: { value: DateFilter; onChange: (v: Date
 }
 
 function KpiPill({ label, value, color, onClick }: { label: string; value: number; color: string; onClick?: () => void }) {
+  const isAction = !!onClick
   return (
-    <div onClick={onClick} style={{
-      display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
-      background: 'var(--flour)', borderRadius: 'var(--r-pill)',
-      padding: '6px 14px', boxShadow: 'var(--shadow-sm)',
-      cursor: onClick ? 'pointer' : 'default',
-      border: '1px solid var(--line)',
-    }}>
-      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-base)', fontWeight: 'var(--weight-black)', color, lineHeight: 1 }}>
+    <div
+      onClick={onClick}
+      role={isAction ? 'button' : undefined}
+      tabIndex={isAction ? 0 : undefined}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
+        background: isAction ? color : 'var(--flour)',
+        borderRadius: 'var(--r-pill)',
+        padding: '5px 12px',
+        boxShadow: 'var(--shadow-sm)',
+        cursor: isAction ? 'pointer' : 'default',
+        border: isAction ? 'none' : '1px solid var(--line)',
+        transition: 'opacity var(--transition)',
+      }}
+    >
+      <span style={{
+        fontFamily: 'var(--font-mono)', fontSize: 'var(--text-base)', fontWeight: 'var(--weight-black)',
+        color: isAction ? '#fff' : color, lineHeight: 1,
+      }}>
         {value}
       </span>
-      <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 'var(--weight-bold)', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--bran)' }}>
+      <span style={{
+        fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 'var(--weight-bold)',
+        letterSpacing: '0.05em', textTransform: 'uppercase',
+        color: isAction ? 'rgba(255,255,255,0.85)' : 'var(--bran)',
+      }}>
         {label}
       </span>
     </div>
@@ -207,8 +232,20 @@ function DesktopTable({ rows, filter, onNavigate }: { rows: AnyRow[]; filter: Da
               <td style={{ padding: '10px 12px', textAlign: 'center' }}>
                 <StatusBadge status={status} />
               </td>
-              <td style={{ padding: '10px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', color: row.diferencia > 0 ? 'var(--wheat-deep)' : row.diferencia < 0 ? 'var(--babka-orange)' : 'var(--bran)' }}>
-                {row.diferencia === 0 ? '—' : `+${row.diferencia}`}
+              <td style={{ padding: '10px 16px', textAlign: 'right' }}>
+                {row.diferencia === 0
+                  ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--bran)' }}>—</span>
+                  : <span style={{
+                      display: 'inline-block',
+                      background: row.diferencia > 0 ? 'rgba(230,178,60,0.18)' : 'rgba(220,80,50,0.15)',
+                      color: row.diferencia > 0 ? 'var(--wheat-deep)' : 'var(--babka-orange)',
+                      fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-black)',
+                      padding: '2px 8px', borderRadius: 'var(--r-pill)',
+                      border: `1px solid ${row.diferencia > 0 ? 'rgba(230,178,60,0.4)' : 'rgba(220,80,50,0.3)'}`,
+                    }}>
+                      {row.diferencia > 0 ? `+${row.diferencia}` : row.diferencia}
+                    </span>
+                }
               </td>
               <td style={{ padding: '10px 16px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--ink-soft)' }}>
                 {row.totalUnits > 0 ? row.totalUnits : '—'}
@@ -271,12 +308,15 @@ function MobileList({ rows, filter, onNavigate }: { rows: AnyRow[]; filter: Date
 function AgentFeed({ onNavigate }: { onNavigate: (page: string) => void }) {
   const hitlCount = HITL_REQUESTS.length
 
-  const events = [
+  type FeedEvent = {
+    time: string; icon: string; color: string; label: string; detail: string; alert?: boolean
+  }
+  const events: FeedEvent[] = [
     { time: '9:18 pm', icon: '✓', color: '#22C55E', label: 'Slowfood procesado', detail: 'Δ=0 · 96 unidades' },
     { time: '9:03 pm', icon: '✓', color: '#22C55E', label: 'Centro procesado',   detail: 'Δ=0 · 184 unidades' },
     { time: '8:55 pm', icon: '✓', color: '#22C55E', label: 'Montes procesado',   detail: 'Δ=0 · 142 unidades' },
-    { time: '8:47 pm', icon: '⚠', color: 'var(--wheat-deep)', label: 'Norte escalado HITL', detail: '+4 pzas · pendiente aprobación' },
-    { time: '9:12 am', icon: '○', color: 'var(--babka-orange)', label: 'Marista sin reporte', detail: 'Último movimiento apertura' },
+    { time: '8:47 pm', icon: '⚠', color: 'var(--wheat-deep)', label: 'Norte · Δ+4 en HITL', detail: 'Requiere aprobación supervisor', alert: true },
+    { time: '9:12 am', icon: '!', color: 'var(--babka-orange)', label: 'Marista sin reporte', detail: 'Sin actividad desde apertura', alert: true },
   ]
 
   return (
@@ -306,14 +346,32 @@ function AgentFeed({ onNavigate }: { onNavigate: (page: string) => void }) {
       <div style={{ padding: 'var(--space-3)' }}>
         {events.map((ev, i) => (
           <div key={i} style={{
-            display: 'flex', gap: 'var(--space-2)', padding: 'var(--space-2) 0',
-            borderBottom: i < events.length - 1 ? '1px solid var(--line)' : 'none',
+            display: 'flex', gap: 'var(--space-2)',
+            padding: ev.alert ? '6px 8px' : 'var(--space-2) 0',
+            marginBottom: ev.alert ? '4px' : 0,
+            borderRadius: ev.alert ? 'var(--r-md)' : 0,
+            background: ev.alert
+              ? ev.color === 'var(--wheat-deep)'
+                ? 'rgba(230,178,60,0.1)'
+                : 'rgba(220,80,50,0.08)'
+              : 'transparent',
+            borderLeft: ev.alert ? `3px solid ${ev.color}` : 'none',
+            borderBottom: !ev.alert && i < events.length - 1 ? '1px solid var(--line)' : 'none',
           }}>
-            <span style={{ fontSize: '13px', color: ev.color, flexShrink: 0, width: '16px', textAlign: 'center', marginTop: '1px' }}>
+            <span style={{
+              fontSize: ev.alert ? '11px' : '13px',
+              fontWeight: ev.alert ? 'var(--weight-black)' : 'normal',
+              color: ev.color, flexShrink: 0, width: '16px', textAlign: 'center', marginTop: '1px',
+            }}>
               {ev.icon}
             </span>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '12px', fontWeight: 'var(--weight-medium)', color: 'var(--ink)', lineHeight: 1.3 }}>
+              <div style={{
+                fontSize: '12px',
+                fontWeight: ev.alert ? 'var(--weight-bold)' : 'var(--weight-medium)',
+                color: ev.alert ? ev.color : 'var(--ink)',
+                lineHeight: 1.3,
+              }}>
                 {ev.label}
               </div>
               <div style={{ fontSize: '10px', color: 'var(--bran)', marginTop: '1px' }}>
@@ -327,21 +385,23 @@ function AgentFeed({ onNavigate }: { onNavigate: (page: string) => void }) {
         ))}
       </div>
 
-      {/* HITL alert */}
+      {/* HITL action row */}
       {hitlCount > 0 && (
-        <div style={{ margin: 'var(--space-3)', padding: 'var(--space-3)', background: 'rgba(230,178,60,0.12)', borderRadius: 'var(--r-md)', border: '1px solid rgba(230,178,60,0.3)' }}>
-          <div style={{ fontSize: '11px', fontWeight: 'var(--weight-bold)', color: 'var(--wheat-deep)', marginBottom: '6px' }}>
-            {hitlCount} ítems requieren aprobación
-          </div>
+        <div style={{ borderTop: '1px solid var(--line)', padding: 'var(--space-3)' }}>
           <button
             onClick={() => onNavigate('hitl')}
             style={{
-              width: '100%', padding: '6px', background: 'var(--ink)', color: 'var(--wheat)',
-              border: 'none', borderRadius: 'var(--r-md)', cursor: 'pointer',
+              width: '100%', padding: '7px 12px',
+              background: 'rgba(230,178,60,0.12)',
+              color: 'var(--wheat-deep)',
+              border: '1px solid rgba(230,178,60,0.35)',
+              borderRadius: 'var(--r-md)', cursor: 'pointer',
               fontFamily: 'var(--font-body)', fontSize: '11px', fontWeight: 'var(--weight-bold)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}
           >
-            Ir a bandeja HITL →
+            <span>{hitlCount} pendientes en HITL</span>
+            <span style={{ opacity: 0.7 }}>→</span>
           </button>
         </div>
       )}
