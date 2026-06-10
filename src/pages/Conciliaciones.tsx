@@ -45,7 +45,11 @@ type AggRow = {
 type DestinoKey = 'vendido' | 'traspaso' | 'merma' | 'personal' | 'evento' | 'muestra' | 'devolucion'
 type SortDir = 'asc' | 'desc' | null
 type ColKey = 'productName' | 'opening' | 'produced' | 'closing' | 'diferencia' | DestinoKey
-type RecNote = { actor: string; time: string; content: string }
+type NoteTargetType = 'row' | 'cell' | 'branch' | 'day'
+type NoteTarget = { type: NoteTargetType; key: string; label: string }
+type NoteEntry = { id: string; target: NoteTarget; actor: string; time: string; content: string }
+type NotesMap = Map<string, NoteEntry[]>
+type ActiveNoteState = { target: NoteTarget; rect: DOMRect; onRequestAgent?: () => void }
 
 const COL_DEFAULTS: Record<string, number> = {
   productName: 150, opening: 65, produced: 65, closing: 65, diferencia: 60,
@@ -87,6 +91,26 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
   const [selectedDate, setSelectedDate]     = useState(TODAY)
   const [selectedBranchId, setSelectedBranchId] = useState<BranchId | 'todas'>(initialBranchId ?? 'todas')
   const [mobileShowDetail, setMobileShowDetail] = useState(!!initialBranchId)
+  const [notesMap, setNotesMap] = useState<NotesMap>(new Map())
+  const [activeNote, setActiveNote] = useState<ActiveNoteState | null>(null)
+
+  const openNote = useCallback((target: NoteTarget, rect: DOMRect, onRequestAgent?: () => void) => {
+    setActiveNote({ target, rect, onRequestAgent })
+  }, [])
+  const closeNote = useCallback(() => setActiveNote(null), [])
+  const addNote = useCallback((target: NoteTarget, content: string) => {
+    const entry: NoteEntry = {
+      id: `${target.key}-${target.type}-${Math.random().toString(36).slice(2)}`,
+      target, actor: 'Gerente',
+      time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+      content,
+    }
+    setNotesMap(prev => {
+      const updated = new Map(prev)
+      updated.set(target.key, [...(prev.get(target.key) ?? []), entry])
+      return updated
+    })
+  }, [])
 
   const isToday  = selectedDate === TODAY
   const dateIdx  = AVAILABLE_DATES.indexOf(selectedDate)
@@ -158,7 +182,10 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
             <AlertBanner rec={selectedRec} onNavigate={onNavigate} />
           </div>
         )}
-        <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={true} onNavigate={onNavigate} onPinContext={onPinContext} />
+        <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={true} onNavigate={onNavigate} onPinContext={onPinContext} notesMap={notesMap} openNote={openNote} />
+        {activeNote && (
+          <NoteSheet activeNote={activeNote} notes={notesMap.get(activeNote.target.key) ?? []} isMobile={true} onClose={closeNote} onAdd={addNote} />
+        )}
       </div>
     )
   }
@@ -179,6 +206,8 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
           prevDisabled={dateIdx === 0}
           nextDisabled={isToday}
           isMobile={isMobile}
+          dayNoteCount={notesMap.get(selectedDate)?.length ?? 0}
+          onDayNote={(rect) => openNote({ type: 'day', key: selectedDate, label: formatDate(selectedDate) }, rect)}
         />
       </div>
 
@@ -201,7 +230,7 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
                 {alertRecs.map(r => <AlertBanner key={r.id} rec={r} onNavigate={onNavigate} />)}
               </div>
             )}
-            <AggregatedTable isMobile={isMobile} />
+            <AggregatedTable isMobile={isMobile} notesMap={notesMap} openNote={openNote} />
           </>
         ) : selectedRec ? (
           <>
@@ -210,26 +239,45 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
                 <AlertBanner rec={selectedRec} onNavigate={onNavigate} />
               </div>
             )}
-            <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={isMobile} onNavigate={onNavigate} onPinContext={onPinContext} />
+            <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={isMobile} onNavigate={onNavigate} onPinContext={onPinContext} notesMap={notesMap} openNote={openNote} />
           </>
         ) : null}
       </div>
+      {activeNote && (
+        <NoteSheet
+          activeNote={activeNote}
+          notes={notesMap.get(activeNote.target.key) ?? []}
+          isMobile={isMobile}
+          onClose={closeNote}
+          onAdd={addNote}
+        />
+      )}
     </div>
   )
 }
 
 // ─── Date navigation ───────────────────────────────────────────────────────
 
-function DateNav({ formatted, onPrev, onNext, prevDisabled, nextDisabled, isMobile }: {
+function DateNav({ formatted, onPrev, onNext, prevDisabled, nextDisabled, isMobile, dayNoteCount, onDayNote }: {
   formatted: string; onPrev: () => void; onNext: () => void
   prevDisabled: boolean; nextDisabled: boolean; isMobile: boolean
+  dayNoteCount?: number; onDayNote?: (rect: DOMRect) => void
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
       <ArrowBtn onClick={onPrev} disabled={prevDisabled}>←</ArrowBtn>
-      <h1 style={{ margin: 0, fontSize: isMobile ? 'var(--text-xl)' : 'var(--text-2xl)' }}>
-        {formatted}
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+        <h1 style={{ margin: 0, fontSize: isMobile ? 'var(--text-xl)' : 'var(--text-2xl)' }}>
+          {formatted}
+        </h1>
+        {onDayNote && (
+          <NoteAnchor
+            target={{ type: 'day', key: formatted, label: formatted }}
+            count={dayNoteCount ?? 0}
+            onOpen={(_t, rect) => onDayNote(rect)}
+          />
+        )}
+      </div>
       <ArrowBtn onClick={onNext} disabled={nextDisabled}>→</ArrowBtn>
     </div>
   )
@@ -411,9 +459,14 @@ function AlertBanner({ rec, onNavigate }: {
 
 // ─── Aggregated table (Todas + today) ──────────────────────────────────────
 
-function AggregatedTable({ isMobile }: { isMobile: boolean }) {
+function AggregatedTable({ isMobile, notesMap, openNote }: {
+  isMobile: boolean
+  notesMap: NotesMap
+  openNote: (target: NoteTarget, rect: DOMRect, onRequestAgent?: () => void) => void
+}) {
   const [sort, setSort] = useState<{ key: ColKey | null; dir: SortDir }>({ key: null, dir: null })
   const [activeCell, setActiveCell] = useState<ActiveCell>(null)
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null)
   const { colWidths, startResize } = useColResize()
 
   const handleSort = (key: ColKey) => {
@@ -517,29 +570,49 @@ function AggregatedTable({ isMobile }: { isMobile: boolean }) {
               ))}
               <Th sortable sortDir={sort.key === 'closing' ? sort.dir : null} onSort={() => handleSort('closing')} width={cw('closing')} onResizeStart={rs('closing')}>Cierre</Th>
               <Th sortable sortDir={sort.key === 'diferencia' ? sort.dir : null} onSort={() => handleSort('diferencia')} width={cw('diferencia')} onResizeStart={rs('diferencia')}>Δ</Th>
+              <th style={{ width: '28px', padding: 0, position: 'sticky', right: 0, background: 'var(--flour)', boxShadow: '-2px 0 4px rgba(0,0,0,0.04)' }} />
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, idx) => (
-              <tr key={row.sku} style={{ borderBottom: '1px solid var(--line)', background: idx % 2 === 0 ? 'transparent' : 'var(--flour-warm)' }}>
-                <td style={{ padding: 'var(--space-2) var(--space-3)', overflow: 'hidden' }}>
-                  <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.productName}</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap' }}>{row.sku}</div>
-                </td>
-                <Td>{row.opening}</Td><Td>{row.produced}</Td>
-                {activeDestinos.map(d => {
-                  const isActive = activeCell?.sku === row.sku && activeCell.destino === d.key
-                  const val = row[d.key as DestinoKey]
-                  return (
-                    <Td key={d.key} highlight={d.key === 'vendido'} clickable={val > 0} active={isActive}
-                      onClick={val > 0 ? () => handleAggCellClick(row, d.key as DestinoKey, d.label) : undefined}
-                    >{val}</Td>
-                  )
-                })}
-                <Td>{row.closing}</Td>
-                <Td accent={row.diferencia !== 0}>{row.diferencia === 0 ? '—' : `+${row.diferencia}`}</Td>
-              </tr>
-            ))}
+            {rows.map((row, idx) => {
+              const rowNoteCount = notesMap.get(row.sku)?.length ?? 0
+              return (
+                <tr
+                  key={row.sku}
+                  onMouseEnter={() => setHoveredRow(row.sku)}
+                  onMouseLeave={() => setHoveredRow(null)}
+                  style={{ borderBottom: '1px solid var(--line)', background: idx % 2 === 0 ? 'transparent' : 'var(--flour-warm)' }}
+                >
+                  <td style={{ padding: 'var(--space-2) var(--space-3)', overflow: 'hidden' }}>
+                    <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.productName}</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap' }}>{row.sku}</div>
+                  </td>
+                  <Td>{row.opening}</Td><Td>{row.produced}</Td>
+                  {activeDestinos.map(d => {
+                    const isActive = activeCell?.sku === row.sku && activeCell.destino === d.key
+                    const val = row[d.key as DestinoKey]
+                    const cellKey = `${row.sku}:${d.key}`
+                    const cellCount = notesMap.get(cellKey)?.length ?? 0
+                    return (
+                      <Td key={d.key} highlight={d.key === 'vendido'} clickable={val > 0} active={isActive}
+                        onClick={val > 0 ? () => handleAggCellClick(row, d.key as DestinoKey, d.label) : undefined}
+                        noteCount={cellCount}
+                        onNoteClick={(rect) => openNote({ type: 'cell', key: cellKey, label: `${d.label}: ${row.productName}` }, rect)}
+                      >{val}</Td>
+                    )
+                  })}
+                  <Td>{row.closing}</Td>
+                  <Td accent={row.diferencia !== 0}>{row.diferencia === 0 ? '—' : `+${row.diferencia}`}</Td>
+                  <td style={{ padding: '0 4px', width: '28px', textAlign: 'center', position: 'sticky', right: 0, background: 'inherit', boxShadow: '-2px 0 4px rgba(0,0,0,0.04)', opacity: isMobile || hoveredRow === row.sku || rowNoteCount > 0 ? 1 : 0, transition: 'opacity 0.12s' }}>
+                    <NoteAnchor
+                      target={{ type: 'row', key: row.sku, label: row.productName }}
+                      count={rowNoteCount}
+                      onOpen={openNote}
+                    />
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
           <tfoot>
             <tr style={{ borderTop: '2px solid var(--line)', background: 'var(--crumb)' }}>
@@ -548,6 +621,7 @@ function AggregatedTable({ isMobile }: { isMobile: boolean }) {
               {activeDestinos.map(d => <Td key={d.key} bold>{totals[d.key as DestinoKey]}</Td>)}
               <Td bold>{totals.closing}</Td>
               <Td bold accent={totals.diferencia !== 0}>{totals.diferencia === 0 ? '0' : `+${totals.diferencia}`}</Td>
+              <td style={{ width: '28px', position: 'sticky', right: 0, background: 'var(--crumb)', boxShadow: '-2px 0 4px rgba(0,0,0,0.04)' }} />
             </tr>
           </tfoot>
         </table>
@@ -608,13 +682,25 @@ function HistoricalView({ branchCards, selected }: {
 
 type ActiveCell = { itemIds: string[]; sku: string; destino: ReconciliationDestino; label: string; productName: string; total: number } | null
 
-function RecDetail({ rec, isMobile, onNavigate, onPinContext }: { rec: Reconciliation; isMobile: boolean; onNavigate?: (page: string) => void; onPinContext?: (ctx: ChatContext) => void }) {
+function RecDetail({ rec, isMobile, onNavigate, onPinContext, notesMap, openNote }: {
+  rec: Reconciliation; isMobile: boolean
+  onNavigate?: (page: string) => void; onPinContext?: (ctx: ChatContext) => void
+  notesMap: NotesMap
+  openNote: (target: NoteTarget, rect: DOMRect, onRequestAgent?: () => void) => void
+}) {
   const branch = BRANCHES.find(b => b.id === rec.branchId)!
   const activeDestinos = DESTINOS.filter(d => rec.items.some(i => (i[d.key] as number) > 0))
   const [activeCell, setActiveCell] = useState<ActiveCell>(null)
-  const [notes, setNotes] = useState<RecNote[]>([])
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null)
   const [sort, setSort] = useState<{ key: ColKey | null; dir: SortDir }>({ key: null, dir: null })
   const { colWidths, startResize } = useColResize()
+
+  const makeRequestAgent = () => {
+    if (onPinContext && onNavigate) {
+      onPinContext({ type: 'reconciliation', reconciliationId: rec.id, branchId: rec.branchId, branchName: branch.name, totalDiferencia: rec.totalDiferencia, closedBy: rec.closedBy, closedAt: rec.closedAt })
+      onNavigate('chat')
+    }
+  }
 
   const handleSort = (key: ColKey) => {
     setSort(prev => ({
@@ -651,7 +737,14 @@ function RecDetail({ rec, isMobile, onNavigate, onPinContext }: { rec: Reconcili
       <div style={{ padding: isMobile ? 'var(--space-4)' : 'var(--space-6)', borderBottom: '1px solid var(--line)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
           <div>
-            <h3 style={{ marginBottom: '4px', fontSize: isMobile ? 'var(--text-xl)' : 'var(--text-2xl)' }}>{branch.name}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: '4px' }}>
+              <h3 style={{ margin: 0, fontSize: isMobile ? 'var(--text-xl)' : 'var(--text-2xl)' }}>{branch.name}</h3>
+              <NoteAnchor
+                target={{ type: 'branch', key: rec.branchId, label: branch.name }}
+                count={notesMap.get(rec.branchId)?.length ?? 0}
+                onOpen={(target, rect) => openNote(target, rect, makeRequestAgent)}
+              />
+            </div>
             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--bran)' }}>
               {rec.closedBy ? `Cerrado por ${rec.closedBy}` : branch.manager}
               {rec.closedAt && ` · ${new Date(rec.closedAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`}
@@ -660,13 +753,6 @@ function RecDetail({ rec, isMobile, onNavigate, onPinContext }: { rec: Reconcili
           <DeltaBadge value={rec.totalDiferencia} />
         </div>
       </div>
-
-      <ReconciliationNotes notes={notes} onAddNote={(content) => setNotes([...notes, { actor: 'Gerente', time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }), content }])} onRequestAgent={() => {
-        if (onPinContext && onNavigate) {
-          onPinContext({ type: 'reconciliation', reconciliationId: rec.id, branchId: rec.branchId, branchName: branch.name, totalDiferencia: rec.totalDiferencia, closedBy: rec.closedBy, closedAt: rec.closedAt })
-          onNavigate('chat')
-        }
-      }} />
 
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: isMobile ? '480px' : 'auto' }}>
@@ -680,29 +766,49 @@ function RecDetail({ rec, isMobile, onNavigate, onPinContext }: { rec: Reconcili
               ))}
               <Th sortable sortDir={sort.key === 'closing' ? sort.dir : null} onSort={() => handleSort('closing')} width={cw('closing')} onResizeStart={rs('closing')}>Cierre</Th>
               <Th sortable sortDir={sort.key === 'diferencia' ? sort.dir : null} onSort={() => handleSort('diferencia')} width={cw('diferencia')} onResizeStart={rs('diferencia')}>Δ</Th>
+              <th style={{ width: '28px', padding: 0, position: 'sticky', right: 0, background: 'var(--flour)', boxShadow: '-2px 0 4px rgba(0,0,0,0.04)' }} />
             </tr>
           </thead>
           <tbody>
-            {items.map((item, idx) => (
-              <tr key={item.id} style={{ borderBottom: '1px solid var(--line)', background: idx % 2 === 0 ? 'transparent' : 'var(--flour-warm)' }}>
-                <td style={{ padding: 'var(--space-2) var(--space-3)', overflow: 'hidden' }}>
-                  <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.productName}</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap' }}>{item.sku}</div>
-                </td>
-                <Td>{item.opening}</Td><Td>{item.produced}</Td>
-                {activeDestinos.map(d => {
-                  const isActive = activeCell?.sku === item.sku && activeCell?.destino === d.key
-                  const val = item[d.key] as number
-                  return (
-                    <Td key={d.key} highlight={d.key === 'vendido'} clickable={val > 0} active={isActive}
-                      onClick={val > 0 ? () => handleCellClick(item, d.key as ReconciliationDestino, d.label) : undefined}
-                    >{val}</Td>
-                  )
-                })}
-                <Td>{item.closing}</Td>
-                <Td accent={item.diferencia !== 0}>{item.diferencia === 0 ? '—' : `+${item.diferencia}`}</Td>
-              </tr>
-            ))}
+            {items.map((item, idx) => {
+              const rowNoteCount = notesMap.get(item.id)?.length ?? 0
+              return (
+                <tr
+                  key={item.id}
+                  onMouseEnter={() => setHoveredRow(item.id)}
+                  onMouseLeave={() => setHoveredRow(null)}
+                  style={{ borderBottom: '1px solid var(--line)', background: idx % 2 === 0 ? 'transparent' : 'var(--flour-warm)' }}
+                >
+                  <td style={{ padding: 'var(--space-2) var(--space-3)', overflow: 'hidden' }}>
+                    <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.productName}</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap' }}>{item.sku}</div>
+                  </td>
+                  <Td>{item.opening}</Td><Td>{item.produced}</Td>
+                  {activeDestinos.map(d => {
+                    const isActive = activeCell?.sku === item.sku && activeCell?.destino === d.key
+                    const val = item[d.key] as number
+                    const cellKey = `${item.id}:${d.key}`
+                    const cellCount = notesMap.get(cellKey)?.length ?? 0
+                    return (
+                      <Td key={d.key} highlight={d.key === 'vendido'} clickable={val > 0} active={isActive}
+                        onClick={val > 0 ? () => handleCellClick(item, d.key as ReconciliationDestino, d.label) : undefined}
+                        noteCount={cellCount}
+                        onNoteClick={(rect) => openNote({ type: 'cell', key: cellKey, label: `${d.label}: ${item.productName}` }, rect, makeRequestAgent)}
+                      >{val}</Td>
+                    )
+                  })}
+                  <Td>{item.closing}</Td>
+                  <Td accent={item.diferencia !== 0}>{item.diferencia === 0 ? '—' : `+${item.diferencia}`}</Td>
+                  <td style={{ padding: '0 4px', width: '28px', textAlign: 'center', position: 'sticky', right: 0, background: 'inherit', boxShadow: '-2px 0 4px rgba(0,0,0,0.04)', opacity: isMobile || hoveredRow === item.id || rowNoteCount > 0 ? 1 : 0, transition: 'opacity 0.12s' }}>
+                    <NoteAnchor
+                      target={{ type: 'row', key: item.id, label: item.productName }}
+                      count={rowNoteCount}
+                      onOpen={(target, rect) => openNote(target, rect, makeRequestAgent)}
+                    />
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
           <tfoot>
             <tr style={{ borderTop: '2px solid var(--line)', background: 'var(--crumb)' }}>
@@ -714,6 +820,7 @@ function RecDetail({ rec, isMobile, onNavigate, onPinContext }: { rec: Reconcili
               ))}
               <Td bold>{rec.items.reduce((s, i) => s + i.closing, 0)}</Td>
               <Td bold accent={rec.totalDiferencia !== 0}>{rec.totalDiferencia === 0 ? '0' : `+${rec.totalDiferencia}`}</Td>
+              <td style={{ width: '28px', position: 'sticky', right: 0, background: 'var(--crumb)', boxShadow: '-2px 0 4px rgba(0,0,0,0.04)' }} />
             </tr>
           </tfoot>
         </table>
@@ -780,14 +887,17 @@ function ResizeHandle({ onMouseDown }: { onMouseDown: (e: React.MouseEvent) => v
   )
 }
 
-function Td({ children, bold, highlight, accent, clickable, active, onClick }: {
+function Td({ children, bold, highlight, accent, clickable, active, onClick, noteCount, onNoteClick }: {
   children: React.ReactNode
   bold?: boolean; highlight?: boolean; accent?: boolean
   clickable?: boolean; active?: boolean; onClick?: () => void
+  noteCount?: number; onNoteClick?: (rect: DOMRect) => void
 }) {
   const [hovered, setHovered] = useState(false)
+  const ref = useRef<HTMLTableCellElement>(null)
   return (
     <td
+      ref={ref}
       onClick={onClick}
       onMouseEnter={() => clickable && setHovered(true)}
       onMouseLeave={() => clickable && setHovered(false)}
@@ -812,6 +922,24 @@ function Td({ children, bold, highlight, accent, clickable, active, onClick }: {
           textUnderlineOffset: '2px',
         }}>{children}</span>
       ) : children}
+      {onNoteClick && noteCount != null && noteCount > 0 && (
+        <button
+          onClick={e => {
+            e.stopPropagation()
+            if (ref.current) onNoteClick(ref.current.getBoundingClientRect())
+          }}
+          title={`${noteCount} nota${noteCount > 1 ? 's' : ''}`}
+          style={{
+            position: 'absolute', top: '2px', right: '2px',
+            background: 'var(--babka-blue)', color: '#fff',
+            border: 'none', borderRadius: '50%',
+            width: '14px', height: '14px',
+            fontSize: '8px', fontWeight: 'var(--weight-bold)', fontFamily: 'var(--font-mono)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', lineHeight: 1,
+          }}
+        >{noteCount > 9 ? '9+' : noteCount}</button>
+      )}
     </td>
   )
 }
@@ -931,64 +1059,171 @@ function CellModal({ cell, onClose }: { cell: NonNullable<ActiveCell>; onClose: 
   )
 }
 
-// ─── Reconciliation notes section ───────────────────────────────────────────
+// ─── Contextual annotation components ──────────────────────────────────────
 
-function ReconciliationNotes({ notes, onAddNote, onRequestAgent }: { notes: RecNote[]; onAddNote: (content: string) => void; onRequestAgent: () => void }) {
+function NoteAnchor({ target, count, onOpen }: {
+  target: NoteTarget; count: number
+  onOpen: (target: NoteTarget, rect: DOMRect) => void
+}) {
+  const ref = useRef<HTMLButtonElement>(null)
+  return (
+    <button
+      ref={ref}
+      onClick={e => {
+        e.stopPropagation()
+        if (ref.current) onOpen(target, ref.current.getBoundingClientRect())
+      }}
+      title={count > 0 ? `${count} nota${count > 1 ? 's' : ''}` : 'Añadir nota'}
+      style={{
+        background: count > 0 ? 'rgba(59,130,246,0.1)' : 'none',
+        border: count > 0 ? '1px solid rgba(59,130,246,0.25)' : '1px solid transparent',
+        cursor: 'pointer',
+        padding: '1px 5px',
+        borderRadius: 'var(--r-sm)',
+        display: 'inline-flex', alignItems: 'center', gap: '3px',
+        color: count > 0 ? 'var(--babka-blue)' : 'var(--bran)',
+        fontSize: '11px', lineHeight: 1,
+        transition: 'all 0.12s',
+        fontFamily: 'var(--font-body)',
+      }}
+    >
+      <span style={{ fontSize: '10px' }}>✎</span>
+      {count > 0 && (
+        <span style={{ fontSize: '9px', fontWeight: 'var(--weight-bold)', fontFamily: 'var(--font-mono)' }}>
+          {count}
+        </span>
+      )}
+    </button>
+  )
+}
+
+function NoteSheet({ activeNote, notes, isMobile, onClose, onAdd }: {
+  activeNote: ActiveNoteState
+  notes: NoteEntry[]
+  isMobile: boolean
+  onClose: () => void
+  onAdd: (target: NoteTarget, content: string) => void
+}) {
   const [input, setInput] = useState('')
+  const { rect } = activeNote
+  const SHEET_W = 300
+
   const handleSave = () => {
+    if (!input.trim()) return
+    onAdd(activeNote.target, input.trim())
+    setInput('')
+  }
+  const handleRequestAgent = () => {
     if (input.trim()) {
-      onAddNote(input.trim())
+      onAdd(activeNote.target, input.trim())
       setInput('')
     }
+    activeNote.onRequestAgent?.()
+    onClose()
   }
+
+  const sheetStyle: React.CSSProperties = isMobile ? {
+    position: 'fixed', bottom: 0, left: 0, right: 0,
+    borderRadius: 'var(--r-lg) var(--r-lg) 0 0',
+    maxHeight: '60vh',
+  } : (() => {
+    const below = rect.bottom + 8
+    const top = below + 360 > window.innerHeight ? Math.max(8, rect.top - 368) : below
+    const left = Math.max(8, Math.min(rect.left, window.innerWidth - SHEET_W - 8))
+    return { position: 'fixed', top, left, width: `${SHEET_W}px`, maxHeight: '380px', borderRadius: 'var(--r-lg)' }
+  })()
+
+  const TYPE_LABEL: Record<NoteTargetType, string> = { row: 'Fila', cell: 'Celda', branch: 'Sucursal', day: 'Día' }
+
   return (
-    <div style={{ padding: 'var(--space-4)', background: 'var(--flour)', borderBottom: '1px solid var(--line)' }}>
-      <div style={{ marginBottom: notes.length > 0 ? 'var(--space-4)' : '0' }}>
-        <div style={{ fontSize: '10px', fontWeight: 'var(--weight-bold)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--bran)', marginBottom: 'var(--space-2)' }}>
-          NOTAS {notes.length > 0 && `(${notes.length})`}
+    <>
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed', inset: 0,
+          background: isMobile ? 'rgba(26,23,20,0.4)' : 'transparent',
+          backdropFilter: isMobile ? 'blur(2px)' : 'none',
+          zIndex: 302,
+        }}
+      />
+      <div style={{
+        ...sheetStyle,
+        background: 'var(--flour)',
+        boxShadow: 'var(--shadow-xl)',
+        border: '1px solid var(--line)',
+        zIndex: 303,
+        display: 'flex', flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          padding: 'var(--space-3) var(--space-4)',
+          borderBottom: '1px solid var(--line)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <span style={{ fontSize: '9px', fontWeight: 'var(--weight-bold)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--bran)', background: 'var(--flour-warm)', padding: '2px 7px', borderRadius: 'var(--r-pill)', border: '1px solid var(--line)' }}>
+              {TYPE_LABEL[activeNote.target.type]}
+            </span>
+            <span style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-medium)', color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>
+              {activeNote.target.label}
+            </span>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--bran)', fontSize: '16px', lineHeight: 1, padding: '0 2px', flexShrink: 0 }}>×</button>
         </div>
+
         {notes.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
-            {notes.map((note, idx) => (
-              <div key={idx} style={{
-                padding: 'var(--space-3)',
-                background: 'var(--flour-warm)',
-                borderRadius: 'var(--r-md)',
-                borderLeft: '3px solid var(--babka-blue)',
-              }}>
-                <div style={{ fontSize: '10px', color: 'var(--bran)', marginBottom: '4px' }}>
-                  {note.actor} · {note.time}
-                </div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--ink)', lineHeight: 1.5 }}>
-                  {note.content}
-                </div>
+          <div style={{ overflowY: 'auto', flex: 1, padding: 'var(--space-3) var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            {notes.map(note => (
+              <div key={note.id} style={{ borderLeft: '2px solid var(--babka-blue)', paddingLeft: 'var(--space-3)' }}>
+                <div style={{ fontSize: '10px', color: 'var(--bran)', marginBottom: '2px' }}>{note.actor} · {note.time}</div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--ink)', lineHeight: 1.4 }}>{note.content}</div>
               </div>
             ))}
           </div>
         )}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-        <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Agregar nota..." style={{
-          width: '100%', padding: 'var(--space-3)', borderRadius: 'var(--r-md)',
-          border: '1px solid var(--line)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
-          color: 'var(--ink)', resize: 'vertical', minHeight: '60px',
-        }} />
-        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          <button onClick={handleSave} disabled={!input.trim()} style={{
-            flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--r-md)',
-            border: '1px solid var(--line)', background: input.trim() ? 'var(--babka-blue)' : 'var(--line)',
-            color: input.trim() ? '#fff' : 'var(--bran)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
-            fontWeight: 'var(--weight-bold)', cursor: input.trim() ? 'pointer' : 'default',
-          }}>Guardar nota</button>
-          <button onClick={onRequestAgent} style={{
-            flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--r-md)',
-            border: '1px solid var(--babka-blue)', background: 'transparent',
-            color: 'var(--babka-blue)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
-            fontWeight: 'var(--weight-bold)', cursor: 'pointer',
-          }}>Pedir a Dante →</button>
+
+        <div style={{ padding: 'var(--space-3) var(--space-4)', borderTop: notes.length > 0 ? '1px solid var(--line)' : 'none', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <textarea
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSave() } }}
+            placeholder="Añadir nota..."
+            autoFocus
+            style={{
+              width: '100%', padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--r-md)',
+              border: '1px solid var(--line)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+              color: 'var(--ink)', resize: 'none', minHeight: '56px',
+              background: 'var(--flour-warm)', boxSizing: 'border-box',
+            } as React.CSSProperties}
+          />
+          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+            <button
+              onClick={handleSave}
+              disabled={!input.trim()}
+              style={{
+                flex: 1, padding: '6px var(--space-3)', borderRadius: 'var(--r-md)',
+                border: '1px solid var(--line)',
+                background: input.trim() ? 'var(--babka-blue)' : 'var(--line)',
+                color: input.trim() ? '#fff' : 'var(--bran)',
+                fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+                fontWeight: 'var(--weight-bold)', cursor: input.trim() ? 'pointer' : 'default',
+              }}
+            >Guardar</button>
+            {activeNote.onRequestAgent && (notes.length > 0 || input.trim()) && (
+              <button
+                onClick={handleRequestAgent}
+                style={{
+                  flex: 1, padding: '6px var(--space-3)', borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--babka-blue)', background: 'transparent',
+                  color: 'var(--babka-blue)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+                  fontWeight: 'var(--weight-bold)', cursor: 'pointer',
+                }}
+              >Dante →</button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
