@@ -2,37 +2,52 @@
 
 > Panadería de masa madre + café de especialidad · Mérida, Yucatán
 
-BABKA es un agente AI de operaciones para SOCO (el grupo de restaurantes/panaderías). Automatiza el cierre de vitrina, la conciliación de inventario y el flujo de pedidos vía WhatsApp — con humanos en el loop para todo lo que no cierra limpio.
+BABKA es un agente AI de operaciones para SOCO. Automatiza el cierre de vitrina, la conciliación de inventario y el flujo de pedidos vía WhatsApp — con humanos en el loop para todo lo que no cierra limpio.
+
+**Demo (Fase 0 — sin backend):** https://babka-pfjxvdjt3-juliuscesarius-projects.vercel.app
 
 ---
 
-## Arquitectura del sistema
+## Qué hace el dashboard hoy (Fase 0)
+
+| Página | Descripción |
+|--------|------------|
+| **Resumen** | Vista operativa por sucursal: estado de cierre, descuadres, revisiones pendientes, feed de actividad. Toggle Admin / CEO para cambiar entre vista operativa y ejecutiva. |
+| **Conciliaciones** | Tablas de inventario por sucursal y destino. Anotaciones contextuales por fila y celda. Modal de detalle de celda con notas inline y CTA a Dante. |
+| **Calendario** | Historial de cierres por fecha y sucursal. |
+| **Revisión** | Cola de aprobaciones HITL ordenada por prioridad. Cada ítem muestra mensaje del agente, opciones de acción con radio buttons, trazabilidad completa e hipótesis del agente. |
+| **WhatsApp** | Simulación del canal de conversación BABKA ↔ gerente. |
+| **Clarisa AI** | Chat con mock de respuestas del agente. CTAs de revisiones pendientes cableados. |
+
+Todos los datos son fixtures tipados en `src/fixtures/` — no hay backend ni secretos.
+
+---
+
+## Arquitectura objetivo (Fases 4+)
 
 ```
 WhatsApp (Baileys)
       ↓
 Orquestador LangGraph
       ↓              ↓
-BABKA-Vitrina   BABKA-Checklist   ← sub-agentes
+BABKA-Vitrina   BABKA-Checklist
       ↓
 Supabase (BD + Auth + Storage)
       ↓
 Dashboard React (Clarisa + dueños)
       ↑
-  HITL Queue (aprobaciones humanas)
+  Revisiones (HITL Queue)
 ```
 
 **Sucursales:** Centro · Norte · Montes Ame · Marista · Slowfood
 
 ---
 
-## Plan de implementación
-
-Ver [`BABKA-implementation-plan.md`](./BABKA-implementation-plan.md) para el plan completo por fases.
+## Fases de implementación
 
 | Fase | Descripción | Estado |
 |------|------------|--------|
-| 0 · El cascarón | Dashboard navegable completo, datos falsos | 🚧 En progreso |
+| 0 · El cascarón | Dashboard navegable completo, datos falsos | ✅ Completo |
 | 1 · Se siente vivo | UI reactiva con mock API (MSW) | Pendiente |
 | 2 · Datos de verdad | Auth + Supabase + persistencia | Pendiente |
 | 3 · Entra la realidad | Parser POS (SoftRestaurant XLS) + conciliación manual | Pendiente |
@@ -41,21 +56,21 @@ Ver [`BABKA-implementation-plan.md`](./BABKA-implementation-plan.md) para el pla
 | 6 · El piloto | Autonomía de una sucursal × 5 días seguidos | Pendiente |
 | 7+ · Aprende y se arregla | V2: Curator, Maintenance, FoodCost, Compras | Futuro |
 
+Ver [`BABKA-implementation-plan.md`](./BABKA-implementation-plan.md) para el plan completo.
+
 ---
 
 ## Stack técnico
 
 | Capa | Tecnología |
 |------|-----------|
-| Frontend | React + Vite + TypeScript |
-| UI / Componentes | Design System BABKA + shadcn/ui + Recharts |
-| Mock API (Fase 1) | Mock Service Worker (MSW) |
+| Frontend | React 18 + Vite 5 + TypeScript strict |
+| Gráficas | Recharts |
 | Base de datos | Supabase (PostgreSQL + Auth + Storage + pgvector) |
 | Agente | LangGraph + Claude (Anthropic) |
 | WhatsApp | Baileys |
 | Tracing | LangSmith |
-| Alertas/Email | Sentry + SendGrid/Resend |
-| Deploy | artifacts.dashone.ai |
+| Deploy | Vercel |
 
 ---
 
@@ -71,39 +86,14 @@ El design system de BABKA vive en [`/design-system`](./design-system).
 | Tipografía UI | DM Sans |
 | Tipografía datos/precios | JetBrains Mono |
 | Color primario (CTAs) | `--wheat` · `#E6B23C` |
-| Color firma de marca | `--babka-blue` · `#1F5AD9` |
+| Color firma | `--babka-blue` · `#1F5AD9` |
 | Color acento | `--babka-orange` · `#DC7A33` |
 | Fondo base | `--flour` · `#FFFFFF` |
 | Texto principal | `--ink` · `#1A1714` |
 
-### Regla de proporción de color: 60 / 20 / 10 / 10
+**Tokens CSS:** `--space-N`, `--text-xs/sm/base/lg…`, `--r-sm/md/lg/pill`, `--z-modal: 300`
 
-- **60%** Blanco/crema — fondo y aire
-- **20%** Amarillo trigo — CTAs y highlights
-- **10%** Azul cobalt — firma de marca
-- **10%** Tinta — estructura y texto
-
-### Componentes disponibles
-
-```
-design-system/
-├── tokens/           # colors.css · typography.css · spacing.css · base.css
-├── styles.css        # entry point (@imports de tokens)
-├── assets/           # SVGs: wordmark, logo, icon
-├── components/core/  # Button · Badge · Input · ProductCard
-└── _ds_bundle.js     # bundle React pre-compilado
-```
-
-**Uso rápido:**
-```tsx
-// Importa tokens CSS globalmente en main.tsx
-import './design-system/styles.css'
-
-// Usa los componentes JSX
-import { Button, Badge } from './design-system/_ds_bundle.js'
-```
-
-### Principios de diseño
+### Principios
 
 - Bordes siempre redondeados (`--r-sm` 10px → `--r-pill` 999px). Jamás 0px.
 - Sombras cálidas (`rgba(26,23,20,…)`). Nunca azuladas.
@@ -114,19 +104,34 @@ import { Button, Badge } from './design-system/_ds_bundle.js'
 
 ---
 
-## Estructura del proyecto (Fase 0+)
+## Estructura del proyecto
 
 ```
 babka/
 ├── README.md
 ├── BABKA-implementation-plan.md
-├── design-system/           # Design System BABKA (tokens + componentes)
+├── design-system/           # Tokens CSS + componentes base
 ├── src/
 │   ├── main.tsx
-│   ├── App.tsx
-│   ├── fixtures/            # Datos falsos tipados (contrato de la API)
-│   ├── components/          # Componentes UI de la app
-│   ├── pages/               # Resumen · Conciliaciones · HITL · WhatsApp
+│   ├── App.tsx              # Estado global: role, page, chatContext
+│   ├── fixtures/            # Datos falsos tipados (contrato de la API futura)
+│   │   ├── branches.ts      # Sucursales, conciliaciones, HITL requests
+│   │   ├── chat.ts          # Mensajes iniciales + respuestas mock
+│   │   └── history.ts       # Snapshots históricos
+│   ├── components/
+│   │   ├── Layout.tsx       # Shell: Nav (desktop) / TopBar+BottomNav (mobile)
+│   │   ├── Nav.tsx          # Sidebar desktop — sticky 100vh
+│   │   ├── TopBar.tsx       # Header mobile/tablet + RoleToggle (exportado)
+│   │   └── BottomNav.tsx    # Nav inferior mobile
+│   ├── pages/
+│   │   ├── Resumen.tsx      # Vista operativa + ejecutiva (CEO toggle)
+│   │   ├── Conciliaciones.tsx # Tablas + anotaciones contextuales
+│   │   ├── HITL.tsx         # Cola de revisiones con radio buttons
+│   │   ├── AgentChat.tsx    # Chat Clarisa AI
+│   │   ├── Calendario.tsx
+│   │   └── WhatsAppSim.tsx
+│   ├── hooks/
+│   │   └── useBreakpoint.ts # isMobile (<640) · isTablet (640–1024) · isDesktop (≥1024)
 │   └── types/               # Tipos TypeScript (= contrato Pydantic futuro)
 ├── package.json
 └── vite.config.ts
@@ -134,7 +139,7 @@ babka/
 
 ---
 
-## Desarrollo local (Fase 0 — sin backend)
+## Desarrollo local
 
 ```bash
 npm install
@@ -144,10 +149,15 @@ npm run dev
 
 No se necesita ningún secreto ni infraestructura. Todo corre con datos ficticios de `src/fixtures/`.
 
+```bash
+npm run build   # build de producción
+npx vercel      # deploy a Vercel
+```
+
 ---
 
-## Contacto / Equipo
+## Contacto
 
 - **Producto / dueños:** SOCO Mérida
-- **Operadora principal:** Clarisa (usuario HITL)
-- **Deploy:** `artifacts.dashone.ai`
+- **Operadora principal:** Clarisa (usuario principal del dashboard)
+- **Demo:** https://babka-pfjxvdjt3-juliuscesarius-projects.vercel.app
