@@ -34,7 +34,7 @@ export const INITIAL_MESSAGES: ChatMessage[] = [
   {
     id: 'init-3',
     role: 'agent',
-    content: 'Hay 4 ítems en la bandeja HITL que requieren tu revisión. ¿Los vemos ahora o prefieres revisar primero alguna sucursal?',
+    content: 'Hay 4 revisiones pendientes que requieren tu atención. ¿Las vemos ahora o prefieres revisar primero alguna sucursal?',
     timestamp: new Date(Date.now() - 1000 * 60 * 10 + 1200).toISOString(),
     card: {
       type: 'hitl-alert',
@@ -93,10 +93,17 @@ export function getSimulatedResponse(input: string): SimResponse[] {
     ]
   }
 
-  if (match(q, ['hitl', 'cola', 'pendiente', 'aprobac', 'aprobar'])) {
+  if (match(q, ['hitl', 'revision', 'revisión', 'cola', 'pendiente', 'aprobac', 'aprobar', 'ver rev'])) {
     return [
-      { content: 'Hay 4 items en la bandeja de aprobaciones:' },
+      { content: 'Hay 4 revisiones pendientes:' },
       { content: '1. ↑ Alta — Descuadre de 4 piezas en Norte\n2. → Media — Traspaso Centro → Norte sin confirmar\n3. → Media — Alias desconocido "bab choco grande"\n4. ↓ Baja — Merma alta en croissants Centro' },
+    ]
+  }
+
+  if (match(q, ['resumir', 'resumen revis', 'qué hay', 'que hay'])) {
+    return [
+      { content: 'Resumen de revisiones (4 ítems):' },
+      { content: '· Norte: 4 pzas de Babka sin destino — probable merma no reportada o traspaso sin confirmar.\n· Traspaso Centro→Norte: 5 pzas registradas por Diego, Sofía no ha confirmado recepción.\n· Alias "bab choco grande": no coincide con ningún SKU, probablemente Babka chocolate 700g.\n· Merma Centro: 7 croissants hoy vs promedio 2.1 — fuera del rango normal.' },
     ]
   }
 
@@ -109,7 +116,7 @@ export function getSimulatedResponse(input: string): SimResponse[] {
 
   if (match(q, ['merma'])) {
     return [
-      { content: 'Hoy hay una merma inusual en Centro: 7 croissants vs el promedio de 2.1 en los últimos 30 días. Está en la bandeja HITL como baja prioridad.' },
+      { content: 'Hoy hay una merma inusual en Centro: 7 croissants vs el promedio de 2.1 en los últimos 30 días. Está en revisiones como baja prioridad.' },
     ]
   }
 
@@ -127,7 +134,7 @@ export function getSimulatedResponse(input: string): SimResponse[] {
 
   // Default
   return [
-    { content: 'Entendido. Puedo ayudarte con el estado de las sucursales, la bandeja HITL, traspasos o mermas. ¿Qué quieres revisar?' },
+    { content: 'Entendido. Puedo ayudarte con el estado de las sucursales, revisiones pendientes, traspasos o mermas. ¿Qué quieres ver?' },
   ]
 }
 

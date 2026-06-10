@@ -8,7 +8,7 @@ import type { ChatContext } from '../types'
 const OPS_QUICK_ACTIONS = [
   'Resumen del día',
   'Estado de Norte',
-  'Cola HITL',
+  'Revisiones pendientes',
   'Marista sin reporte',
   'Traspasos pendientes',
 ]
@@ -140,7 +140,7 @@ export function AgentChat({ role = 'ops', pinnedContext, onClearContext }: {
         gap: 'var(--space-3)',
       }}>
         {messages.map(msg => (
-          <MessageBubble key={msg.id} message={msg} isMobile={isMobile} />
+          <MessageBubble key={msg.id} message={msg} isMobile={isMobile} onAction={sendMessage} />
         ))}
 
         {typing && <TypingIndicator />}
@@ -323,7 +323,7 @@ function PinnedContextCard({ request, onClear, isMobile }: {
   )
 }
 
-function MessageBubble({ message, isMobile }: { message: ChatMessage; isMobile: boolean }) {
+function MessageBubble({ message, isMobile, onAction }: { message: ChatMessage; isMobile: boolean; onAction?: (msg: string) => void }) {
   const isAgent = message.role === 'agent'
 
   return (
@@ -357,7 +357,7 @@ function MessageBubble({ message, isMobile }: { message: ChatMessage; isMobile: 
         {message.content}
       </div>
 
-      {message.card && <InlineCard card={message.card} isMobile={isMobile} />}
+      {message.card && <InlineCard card={message.card} isMobile={isMobile} onAction={onAction} />}
 
       <span style={{
         fontSize: '10px',
@@ -371,7 +371,7 @@ function MessageBubble({ message, isMobile }: { message: ChatMessage; isMobile: 
   )
 }
 
-function InlineCard({ card, isMobile }: { card: ChatCard; isMobile: boolean }) {
+function InlineCard({ card, isMobile, onAction }: { card: ChatCard; isMobile: boolean; onAction?: (msg: string) => void }) {
   const maxW = isMobile ? '88%' : '72%'
 
   if (card.type === 'branch-summary') {
@@ -422,7 +422,7 @@ function InlineCard({ card, isMobile }: { card: ChatCard; isMobile: boolean }) {
               Items pendientes de aprobación
             </div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--bran)', marginTop: '2px' }}>
-              Bandeja HITL · requiere tu revisión
+              Revisiones pendientes · requiere tu atención
             </div>
           </div>
         </div>
@@ -431,8 +431,8 @@ function InlineCard({ card, isMobile }: { card: ChatCard; isMobile: boolean }) {
           padding: 'var(--space-2) var(--space-3)',
           display: 'flex', gap: 'var(--space-2)',
         }}>
-          <ActionChip label="Ver bandeja →" primary />
-          <ActionChip label="Resumir ítems" />
+          <ActionChip label="Ver revisiones →" primary onClick={() => onAction?.('ver revisiones')} />
+          <ActionChip label="Resumir ítems" onClick={() => onAction?.('resumir revisiones')} />
         </div>
       </div>
     )
@@ -441,9 +441,9 @@ function InlineCard({ card, isMobile }: { card: ChatCard; isMobile: boolean }) {
   return null
 }
 
-function ActionChip({ label, primary }: { label: string; primary?: boolean }) {
+function ActionChip({ label, primary, onClick }: { label: string; primary?: boolean; onClick?: () => void }) {
   return (
-    <button style={{
+    <button onClick={onClick} style={{
       padding: '5px 12px', borderRadius: 'var(--r-pill)', border: 'none', cursor: 'pointer',
       background: primary ? 'var(--babka-orange)' : 'rgba(220,122,51,0.12)',
       color: primary ? '#fff' : 'var(--babka-orange-deep)',

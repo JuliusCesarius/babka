@@ -71,7 +71,7 @@ export function WhatsAppSim() {
           El gerente manda mensaje o foto por WhatsApp. BABKA procesa con visión (imagen → inventario JSON),
           valida la aritmética, y cierra solo cuando{' '}
           <code style={{ fontFamily: 'var(--font-mono)' }}>diferencia = 0</code>.
-          Si hay descuadre, escala a la Bandeja HITL.
+          Si hay descuadre, envía a Revisiones para aprobación.
         </p>
       </div>
     </div>

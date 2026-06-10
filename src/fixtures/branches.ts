@@ -173,7 +173,7 @@ export const HITL_REQUESTS: HITLRequest[] = [
       { time: '2026-06-08T19:45:00', actor: 'pos',       event: 'Venta acumulada: 35 piezas total', detail: 'Terminal POS — turno tarde' },
       { time: '2026-06-08T20:30:00', actor: 'gerente',   event: 'Sofía inicia cierre vía WhatsApp', detail: 'Reporta 3 babkas al cierre con foto de vitrina' },
       { time: '2026-06-08T20:47:00', actor: 'agente',    event: 'BABKA detecta descuadre de +4', detail: 'Apertura(18) + Prod(32) - Cierre(3) - Destinos(43) = 4 sin asignar' },
-      { time: '2026-06-08T20:48:00', actor: 'sistema',   event: 'Escalado a revisión humana', detail: 'Cola HITL — alta prioridad' },
+      { time: '2026-06-08T20:48:00', actor: 'sistema',   event: 'Escalado a revisión humana', detail: 'Revisiones — alta prioridad' },
     ],
   },
   {
@@ -210,7 +210,7 @@ export const HITL_REQUESTS: HITLRequest[] = [
       { time: '2026-06-08T20:12:00', actor: 'gerente', event: 'Sofía menciona "bab choco grande"', detail: 'Mensaje WhatsApp durante reporte de cierre' },
       { time: '2026-06-08T20:13:00', actor: 'agente',  event: 'Búsqueda de alias fallida', detail: 'Sin coincidencia en catálogo para "bab choco grande"' },
       { time: '2026-06-08T20:13:00', actor: 'agente',  event: 'BABKA pide confirmación a Sofía', detail: '¿Es BAB-CHO-01 o producto nuevo?' },
-      { time: '2026-06-08T20:15:00', actor: 'sistema', event: 'Sin respuesta — escalado a HITL', detail: 'Timeout 2 min sin confirmación del gerente' },
+      { time: '2026-06-08T20:15:00', actor: 'sistema', event: 'Sin respuesta — enviado a revisión', detail: 'Timeout 2 min sin confirmación del gerente' },
     ],
   },
   {
@@ -334,7 +334,7 @@ export const WHATSAPP_CONVERSATIONS: WhatsAppConversation[] = [
       {
         id: 'msg-014',
         role: 'system',
-        content: 'BABKA escaló a HITL · Clarisa revisando',
+        content: 'BABKA envió a Revisión · Clarisa revisando',
         timestamp: '2026-06-08T20:47:05',
       },
     ],
