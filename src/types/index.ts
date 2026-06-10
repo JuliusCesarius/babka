@@ -108,7 +108,7 @@ export interface HITLRequest {
   priority: HITLPriority
   createdAt: string
   agentMessage?: string
-  suggestedAction?: string
+  suggestedAction?: string[]
   reconciliationId?: string
   timeline?: HITLTimelineEvent[]
   agentHypothesis?: string

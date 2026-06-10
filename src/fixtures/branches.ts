@@ -163,7 +163,7 @@ export const HITL_REQUESTS: HITLRequest[] = [
     priority: 'alta',
     createdAt: '2026-06-08T20:48:00',
     agentMessage: 'Diego reportó el cierre pero hay 4 piezas de Babka chocolate sin destino asignado. ¿Merma no reportada o traspaso a otra sucursal?',
-    suggestedAction: 'Reasignar 4 piezas a merma o confirmar traspaso a Centro',
+    suggestedAction: ['Reasignar 4 piezas a merma', 'Confirmar traspaso a Centro'],
     reconciliationId: 'rec-002',
     agentHypothesis: 'Lo más probable es que las 4 piezas quedaron en vitrina al cierre y no fueron registradas como merma. El patrón es consistente con el historial de Norte los viernes. Segunda hipótesis: traspaso informal a Centro sin registro.',
     timeline: [
@@ -185,7 +185,7 @@ export const HITL_REQUESTS: HITLRequest[] = [
     priority: 'media',
     createdAt: '2026-06-08T19:30:00',
     agentMessage: 'El traspaso de 5 Babka chocolate de Centro a Norte está pendiente de confirmación por el receptor.',
-    suggestedAction: 'Confirmar recepción con Sofía (Norte)',
+    suggestedAction: ['Confirmar recepción con Sofía (Norte)', 'Registrar como traspaso pendiente'],
     reconciliationId: 'rec-001',
     agentHypothesis: 'El traspaso salió de Centro a las 16:00 h. Norte lo incluyó en su conteo de apertura tardío pero no lo registró explícitamente como traspaso recibido. Probable omisión de registro, no robo ni pérdida.',
     timeline: [
@@ -204,7 +204,7 @@ export const HITL_REQUESTS: HITLRequest[] = [
     priority: 'media',
     createdAt: '2026-06-08T20:15:00',
     agentMessage: 'No reconozco "bab choco grande". ¿Es Babka chocolate (BAB-CHO-01) o un producto diferente?',
-    suggestedAction: 'Confirmar: ¿es BAB-CHO-01 (Babka chocolate)?',
+    suggestedAction: ['Sí, es BAB-CHO-01 (Babka chocolate)', 'No, es un producto diferente — crear SKU'],
     agentHypothesis: 'Alta probabilidad de que sea BAB-CHO-01 (Babka chocolate) — el término "grande" puede referirse al formato 400g vs 200g. Si es un producto diferente, requiere alta en el catálogo.',
     timeline: [
       { time: '2026-06-08T20:12:00', actor: 'gerente', event: 'Sofía menciona "bab choco grande"', detail: 'Mensaje WhatsApp durante reporte de cierre' },
@@ -222,7 +222,7 @@ export const HITL_REQUESTS: HITLRequest[] = [
     priority: 'baja',
     createdAt: '2026-06-08T21:05:00',
     agentMessage: 'La merma de croissants en Centro está 3.3× por encima del promedio. ¿Incidente en horno o sobreproducción?',
-    suggestedAction: 'Registrar nota de causa (horno, sobreproducción, otro)',
+    suggestedAction: ['Fallo de horno', 'Sobreproducción', 'Otra causa'],
     agentHypothesis: 'El lunes pasado hubo un fallo de horno similar con 6 mermas. La correlación con el día de la semana sugiere posible sobreproducción sistemática en turno mañana los lunes. Recomiendo revisar la orden de producción del turno 06:00–10:00.',
     timeline: [
       { time: '2026-06-08T09:00:00', actor: 'pos',      event: 'Producción: 40 croissants', detail: 'Lote matutino registrado' },
