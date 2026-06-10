@@ -10,17 +10,16 @@ interface LayoutProps {
   onNavigate: (page: string) => void
   children: ReactNode
   role: UserRole
-  onRoleChange: (r: UserRole) => void
 }
 
-export function Layout({ page, onNavigate, children, role, onRoleChange }: LayoutProps) {
+export function Layout({ page, onNavigate, children, role }: LayoutProps) {
   const { isMobile, isTablet } = useBreakpoint()
   const [navCollapsed, setNavCollapsed] = useState(false)
 
   if (isMobile) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--flour-warm)' }}>
-        <TopBar page={page} onNavigate={onNavigate} role={role} onRoleChange={onRoleChange} />
+        <TopBar page={page} onNavigate={onNavigate} role={role} />
         <main style={{ flex: 1, padding: 'var(--space-4)', paddingBottom: '72px' }}>
           {children}
         </main>
@@ -32,7 +31,7 @@ export function Layout({ page, onNavigate, children, role, onRoleChange }: Layou
   if (isTablet) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--flour-warm)' }}>
-        <TopBar page={page} onNavigate={onNavigate} role={role} onRoleChange={onRoleChange} />
+        <TopBar page={page} onNavigate={onNavigate} role={role} />
         <main style={{ flex: 1, padding: 'var(--space-6)', paddingBottom: '72px' }}>
           {children}
         </main>
@@ -43,7 +42,7 @@ export function Layout({ page, onNavigate, children, role, onRoleChange }: Layou
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: role === 'exec' ? '#F5F4F0' : 'var(--flour-warm)' }}>
-      <Nav page={page} onNavigate={onNavigate} role={role} onRoleChange={onRoleChange} collapsed={navCollapsed} onToggleCollapse={() => setNavCollapsed(c => !c)} />
+      <Nav page={page} onNavigate={onNavigate} role={role} collapsed={navCollapsed} onToggleCollapse={() => setNavCollapsed(c => !c)} />
       <main style={{ flex: 1, padding: 'var(--space-8)', minWidth: 0 }}>
         <div style={{ maxWidth: role === 'exec' ? '1200px' : '1100px', margin: '0 auto' }}>
           {children}
