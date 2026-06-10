@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { BRANCHES, RECONCILIATIONS, BRANCH_SUMMARIES, HITL_REQUESTS } from '../fixtures/branches'
 import { getItemEvents } from '../fixtures/events'
 import { getSnapshotsForDate } from '../fixtures/history'
@@ -42,6 +42,36 @@ type AggRow = {
 }
 
 type DestinoKey = 'vendido' | 'traspaso' | 'merma' | 'personal' | 'evento' | 'muestra' | 'devolucion'
+type SortDir = 'asc' | 'desc' | null
+type ColKey = 'productName' | 'opening' | 'produced' | 'closing' | 'diferencia' | DestinoKey
+
+const COL_DEFAULTS: Record<string, number> = {
+  productName: 150, opening: 65, produced: 65, closing: 65, diferencia: 60,
+  vendido: 65, traspaso: 70, merma: 60, personal: 70, evento: 60, muestra: 65, devolucion: 65,
+}
+
+function useColResize() {
+  const [colWidths, setColWidths] = useState<Record<string, number>>({})
+  const resizingRef = useRef<{ key: string; startX: number; startWidth: number } | null>(null)
+  const startResize = useCallback((key: string, e: React.MouseEvent, el: HTMLTableCellElement) => {
+    e.preventDefault()
+    const width = el.getBoundingClientRect().width
+    resizingRef.current = { key, startX: e.clientX, startWidth: width }
+    const onMove = (ev: MouseEvent) => {
+      if (!resizingRef.current) return
+      const delta = ev.clientX - resizingRef.current.startX
+      setColWidths(prev => ({ ...prev, [resizingRef.current!.key]: Math.max(50, resizingRef.current!.startWidth + delta) }))
+    }
+    const onUp = () => {
+      resizingRef.current = null
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [])
+  return { colWidths, startResize }
+}
 
 function formatDate(isoDate: string) {
   return new Date(isoDate + 'T12:00:00').toLocaleDateString('es-MX', {
@@ -380,6 +410,16 @@ function AlertBanner({ rec, onNavigate }: {
 // ─── Aggregated table (Todas + today) ──────────────────────────────────────
 
 function AggregatedTable({ isMobile }: { isMobile: boolean }) {
+  const [sort, setSort] = useState<{ key: ColKey | null; dir: SortDir }>({ key: null, dir: null })
+  const { colWidths, startResize } = useColResize()
+
+  const handleSort = (key: ColKey) => {
+    setSort(prev => ({
+      key,
+      dir: prev.key === key ? (prev.dir === 'asc' ? 'desc' : prev.dir === 'desc' ? null : 'asc') : 'asc',
+    }))
+  }
+
   const rowMap = new Map<string, AggRow>()
   for (const rec of RECONCILIATIONS) {
     for (const item of rec.items) {
@@ -401,7 +441,16 @@ function AggregatedTable({ isMobile }: { isMobile: boolean }) {
       }
     }
   }
-  const rows = Array.from(rowMap.values()).sort((a, b) => b.vendido - a.vendido)
+  let rows = Array.from(rowMap.values()).sort((a, b) => b.vendido - a.vendido)
+  if (sort.key && sort.dir) {
+    const k = sort.key, d = sort.dir
+    rows = [...rows].sort((a, b) => {
+      const av = a[k as keyof AggRow], bv = b[k as keyof AggRow]
+      const cmp = typeof av === 'number' ? (av as number) - (bv as number) : String(av).localeCompare(String(bv))
+      return d === 'asc' ? cmp : -cmp
+    })
+  }
+
   const activeDestinos = DESTINOS.filter(d => rows.some(r => r[d.key as DestinoKey] > 0))
   const totals = rows.reduce(
     (acc, r) => ({
@@ -413,6 +462,9 @@ function AggregatedTable({ isMobile }: { isMobile: boolean }) {
     }),
     { opening: 0, produced: 0, closing: 0, diferencia: 0, vendido: 0, traspaso: 0, merma: 0, personal: 0, evento: 0, muestra: 0, devolucion: 0 }
   )
+
+  const cw = (k: string) => colWidths[k] ?? COL_DEFAULTS[k]
+  const rs = (k: string) => (e: React.MouseEvent, el: HTMLTableCellElement) => startResize(k, e, el)
 
   return (
     <div style={{ background: 'var(--flour)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
@@ -435,21 +487,25 @@ function AggregatedTable({ isMobile }: { isMobile: boolean }) {
       </div>
 
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '480px' : 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: isMobile ? '480px' : 'auto' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--line)' }}>
-              <Th align="left">Producto</Th>
-              <Th>Apertura</Th><Th>Prod.</Th>
-              {activeDestinos.map(d => <Th key={d.key}>{d.label}</Th>)}
-              <Th>Cierre</Th><Th>Δ</Th>
+              <Th align="left" sortable sortDir={sort.key === 'productName' ? sort.dir : null} onSort={() => handleSort('productName')} width={cw('productName')} onResizeStart={rs('productName')}>Producto</Th>
+              <Th sortable sortDir={sort.key === 'opening' ? sort.dir : null} onSort={() => handleSort('opening')} width={cw('opening')} onResizeStart={rs('opening')}>Apertura</Th>
+              <Th sortable sortDir={sort.key === 'produced' ? sort.dir : null} onSort={() => handleSort('produced')} width={cw('produced')} onResizeStart={rs('produced')}>Prod.</Th>
+              {activeDestinos.map(d => (
+                <Th key={d.key} sortable sortDir={sort.key === d.key ? sort.dir : null} onSort={() => handleSort(d.key as ColKey)} width={cw(d.key)} onResizeStart={rs(d.key)}>{d.label}</Th>
+              ))}
+              <Th sortable sortDir={sort.key === 'closing' ? sort.dir : null} onSort={() => handleSort('closing')} width={cw('closing')} onResizeStart={rs('closing')}>Cierre</Th>
+              <Th sortable sortDir={sort.key === 'diferencia' ? sort.dir : null} onSort={() => handleSort('diferencia')} width={cw('diferencia')} onResizeStart={rs('diferencia')}>Δ</Th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, idx) => (
               <tr key={row.sku} style={{ borderBottom: '1px solid var(--line)', background: idx % 2 === 0 ? 'transparent' : 'var(--flour-warm)' }}>
-                <td style={{ padding: 'var(--space-3) var(--space-4)', minWidth: '140px' }}>
-                  <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)' }}>{row.productName}</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)' }}>{row.sku}</div>
+                <td style={{ padding: 'var(--space-2) var(--space-3)', overflow: 'hidden' }}>
+                  <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.productName}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap' }}>{row.sku}</div>
                 </td>
                 <Td>{row.opening}</Td><Td>{row.produced}</Td>
                 {activeDestinos.map(d => (
@@ -462,7 +518,7 @@ function AggregatedTable({ isMobile }: { isMobile: boolean }) {
           </tbody>
           <tfoot>
             <tr style={{ borderTop: '2px solid var(--line)', background: 'var(--crumb)' }}>
-              <td style={{ padding: 'var(--space-3) var(--space-4)', fontWeight: 'var(--weight-bold)', fontSize: 'var(--text-sm)' }}>Total</td>
+              <td style={{ padding: 'var(--space-2) var(--space-3)', fontWeight: 'var(--weight-bold)', fontSize: 'var(--text-sm)', whiteSpace: 'nowrap' }}>Total</td>
               <Td bold>{totals.opening}</Td><Td bold>{totals.produced}</Td>
               {activeDestinos.map(d => <Td key={d.key} bold>{totals[d.key as DestinoKey]}</Td>)}
               <Td bold>{totals.closing}</Td>
@@ -530,6 +586,15 @@ function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }
   const branch = BRANCHES.find(b => b.id === rec.branchId)!
   const activeDestinos = DESTINOS.filter(d => rec.items.some(i => (i[d.key] as number) > 0))
   const [activeCell, setActiveCell] = useState<ActiveCell>(null)
+  const [sort, setSort] = useState<{ key: ColKey | null; dir: SortDir }>({ key: null, dir: null })
+  const { colWidths, startResize } = useColResize()
+
+  const handleSort = (key: ColKey) => {
+    setSort(prev => ({
+      key,
+      dir: prev.key === key ? (prev.dir === 'asc' ? 'desc' : prev.dir === 'desc' ? null : 'asc') : 'asc',
+    }))
+  }
 
   const handleCellClick = (item: ReconciliationItem, destino: ReconciliationDestino, label: string) => {
     const total = item[destino] as number
@@ -538,6 +603,19 @@ function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }
     const currentKey = activeCell ? `${activeCell.itemId}:${activeCell.destino}` : null
     setActiveCell(currentKey === key ? null : { itemId: item.id, destino, label, productName: item.productName, total })
   }
+
+  let items = rec.items
+  if (sort.key && sort.dir) {
+    const k = sort.key, d = sort.dir
+    items = [...items].sort((a, b) => {
+      const av = a[k as keyof ReconciliationItem], bv = b[k as keyof ReconciliationItem]
+      const cmp = typeof av === 'number' ? (av as number) - (bv as number) : String(av).localeCompare(String(bv))
+      return d === 'asc' ? cmp : -cmp
+    })
+  }
+
+  const cw = (k: string) => colWidths[k] ?? COL_DEFAULTS[k]
+  const rs = (k: string) => (e: React.MouseEvent, el: HTMLTableCellElement) => startResize(k, e, el)
 
   return (
     <div style={{ background: 'var(--flour)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
@@ -555,21 +633,25 @@ function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }
       </div>
 
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: isMobile ? '480px' : 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: isMobile ? '480px' : 'auto' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--line)' }}>
-              <Th align="left">Producto</Th>
-              <Th>Apertura</Th><Th>Prod.</Th>
-              {activeDestinos.map(d => <Th key={d.key}>{d.label}</Th>)}
-              <Th>Cierre</Th><Th>Δ</Th>
+              <Th align="left" sortable sortDir={sort.key === 'productName' ? sort.dir : null} onSort={() => handleSort('productName')} width={cw('productName')} onResizeStart={rs('productName')}>Producto</Th>
+              <Th sortable sortDir={sort.key === 'opening' ? sort.dir : null} onSort={() => handleSort('opening')} width={cw('opening')} onResizeStart={rs('opening')}>Apertura</Th>
+              <Th sortable sortDir={sort.key === 'produced' ? sort.dir : null} onSort={() => handleSort('produced')} width={cw('produced')} onResizeStart={rs('produced')}>Prod.</Th>
+              {activeDestinos.map(d => (
+                <Th key={d.key} sortable sortDir={sort.key === d.key ? sort.dir : null} onSort={() => handleSort(d.key as ColKey)} width={cw(d.key)} onResizeStart={rs(d.key)}>{d.label}</Th>
+              ))}
+              <Th sortable sortDir={sort.key === 'closing' ? sort.dir : null} onSort={() => handleSort('closing')} width={cw('closing')} onResizeStart={rs('closing')}>Cierre</Th>
+              <Th sortable sortDir={sort.key === 'diferencia' ? sort.dir : null} onSort={() => handleSort('diferencia')} width={cw('diferencia')} onResizeStart={rs('diferencia')}>Δ</Th>
             </tr>
           </thead>
           <tbody>
-            {rec.items.map((item, idx) => (
+            {items.map((item, idx) => (
               <tr key={item.id} style={{ borderBottom: '1px solid var(--line)', background: idx % 2 === 0 ? 'transparent' : 'var(--flour-warm)' }}>
-                <td style={{ padding: 'var(--space-3) var(--space-4)', minWidth: '140px' }}>
-                  <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)' }}>{item.productName}</div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)' }}>{item.sku}</div>
+                <td style={{ padding: 'var(--space-2) var(--space-3)', overflow: 'hidden' }}>
+                  <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.productName}</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap' }}>{item.sku}</div>
                 </td>
                 <Td>{item.opening}</Td><Td>{item.produced}</Td>
                 {activeDestinos.map(d => {
@@ -588,7 +670,7 @@ function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }
           </tbody>
           <tfoot>
             <tr style={{ borderTop: '2px solid var(--line)', background: 'var(--crumb)' }}>
-              <td style={{ padding: 'var(--space-3) var(--space-4)', fontWeight: 'var(--weight-bold)', fontSize: 'var(--text-sm)' }}>Total</td>
+              <td style={{ padding: 'var(--space-2) var(--space-3)', fontWeight: 'var(--weight-bold)', fontSize: 'var(--text-sm)', whiteSpace: 'nowrap' }}>Total</td>
               <Td bold>{rec.items.reduce((s, i) => s + i.opening, 0)}</Td>
               <Td bold>{rec.items.reduce((s, i) => s + i.produced, 0)}</Td>
               {activeDestinos.map(d => (
@@ -608,14 +690,57 @@ function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }
 
 // ─── Table helpers ──────────────────────────────────────────────────────────
 
-function Th({ children, align = 'right' }: { children: React.ReactNode; align?: 'left' | 'right' }) {
+function Th({ children, align = 'right', sortDir, sortable, onSort, width, onResizeStart }: {
+  children: React.ReactNode; align?: 'left' | 'right'
+  sortDir?: SortDir; sortable?: boolean; onSort?: () => void
+  width?: number; onResizeStart?: (e: React.MouseEvent, el: HTMLTableCellElement) => void
+}) {
+  const ref = useRef<HTMLTableCellElement>(null)
   return (
-    <th style={{
-      padding: 'var(--space-3)', textAlign: align,
-      fontSize: '10px', fontWeight: 'var(--weight-bold)',
-      letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--bran)',
-      fontFamily: 'var(--font-body)', whiteSpace: 'nowrap',
-    }}>{children}</th>
+    <th
+      ref={ref}
+      onClick={sortable ? onSort : undefined}
+      style={{
+        padding: 'var(--space-2) var(--space-3)',
+        paddingRight: onResizeStart ? 'calc(var(--space-3) + 6px)' : 'var(--space-3)',
+        textAlign: align,
+        fontSize: '10px', fontWeight: 'var(--weight-bold)',
+        letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--bran)',
+        fontFamily: 'var(--font-body)', whiteSpace: 'nowrap',
+        cursor: sortable ? 'pointer' : 'default',
+        userSelect: 'none',
+        position: 'relative',
+        width: width != null ? `${width}px` : undefined,
+        overflow: 'hidden',
+      }}
+    >
+      {children}
+      {sortable && (
+        <span style={{ marginLeft: '4px', fontSize: '9px', opacity: sortDir != null ? 1 : 0.3, verticalAlign: 'middle' }}>
+          {sortDir === 'asc' ? '↑' : sortDir === 'desc' ? '↓' : '↕'}
+        </span>
+      )}
+      {onResizeStart && (
+        <ResizeHandle onMouseDown={e => { e.stopPropagation(); if (ref.current) onResizeStart(e, ref.current) }} />
+      )}
+    </th>
+  )
+}
+
+function ResizeHandle({ onMouseDown }: { onMouseDown: (e: React.MouseEvent) => void }) {
+  const [active, setActive] = useState(false)
+  return (
+    <div
+      onMouseDown={onMouseDown}
+      onMouseEnter={() => setActive(true)}
+      onMouseLeave={() => setActive(false)}
+      style={{
+        position: 'absolute', right: 0, top: '15%', bottom: '15%', width: '4px',
+        cursor: 'col-resize', borderRadius: '2px',
+        background: active ? 'var(--babka-blue)' : 'var(--line)',
+        transition: 'background 0.12s',
+      }}
+    />
   )
 }
 
