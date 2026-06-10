@@ -182,7 +182,7 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
             <AlertBanner rec={selectedRec} onNavigate={onNavigate} />
           </div>
         )}
-        <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={true} onNavigate={onNavigate} onPinContext={onPinContext} notesMap={notesMap} openNote={openNote} />
+        <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={true} onNavigate={onNavigate} onPinContext={onPinContext} notesMap={notesMap} openNote={openNote} addNote={addNote} />
         {activeNote && (
           <NoteSheet activeNote={activeNote} notes={notesMap.get(activeNote.target.key) ?? []} isMobile={true} onClose={closeNote} onAdd={addNote} />
         )}
@@ -230,7 +230,7 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
                 {alertRecs.map(r => <AlertBanner key={r.id} rec={r} onNavigate={onNavigate} />)}
               </div>
             )}
-            <AggregatedTable isMobile={isMobile} notesMap={notesMap} openNote={openNote} />
+            <AggregatedTable isMobile={isMobile} notesMap={notesMap} openNote={openNote} addNote={addNote} />
           </>
         ) : selectedRec ? (
           <>
@@ -239,7 +239,7 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
                 <AlertBanner rec={selectedRec} onNavigate={onNavigate} />
               </div>
             )}
-            <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={isMobile} onNavigate={onNavigate} onPinContext={onPinContext} notesMap={notesMap} openNote={openNote} />
+            <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={isMobile} onNavigate={onNavigate} onPinContext={onPinContext} notesMap={notesMap} openNote={openNote} addNote={addNote} />
           </>
         ) : null}
       </div>
@@ -459,10 +459,11 @@ function AlertBanner({ rec, onNavigate }: {
 
 // ─── Aggregated table (Todas + today) ──────────────────────────────────────
 
-function AggregatedTable({ isMobile, notesMap, openNote }: {
+function AggregatedTable({ isMobile, notesMap, openNote, addNote }: {
   isMobile: boolean
   notesMap: NotesMap
   openNote: (target: NoteTarget, rect: DOMRect, onRequestAgent?: () => void) => void
+  addNote: (target: NoteTarget, content: string) => void
 }) {
   const [sort, setSort] = useState<{ key: ColKey | null; dir: SortDir }>({ key: null, dir: null })
   const [activeCell, setActiveCell] = useState<ActiveCell>(null)
@@ -510,7 +511,7 @@ function AggregatedTable({ isMobile, notesMap, openNote }: {
     setActiveCell(prev =>
       prev && prev.sku === row.sku && prev.destino === (destino as ReconciliationDestino)
         ? null
-        : { itemIds: ids, sku: row.sku, destino: destino as ReconciliationDestino, label, productName: row.productName, total: val }
+        : { itemIds: ids, sku: row.sku, destino: destino as ReconciliationDestino, label, productName: row.productName, total: val, noteKey: `${row.sku}:${destino}` }
     )
   }
   let rows = Array.from(rowMap.values()).sort((a, b) => b.vendido - a.vendido)
@@ -570,7 +571,6 @@ function AggregatedTable({ isMobile, notesMap, openNote }: {
               ))}
               <Th sortable sortDir={sort.key === 'closing' ? sort.dir : null} onSort={() => handleSort('closing')} width={cw('closing')} onResizeStart={rs('closing')}>Cierre</Th>
               <Th sortable sortDir={sort.key === 'diferencia' ? sort.dir : null} onSort={() => handleSort('diferencia')} width={cw('diferencia')} onResizeStart={rs('diferencia')}>Δ</Th>
-              <th style={{ width: '28px', padding: 0, position: 'sticky', right: 0, background: 'var(--flour)', boxShadow: '-2px 0 4px rgba(0,0,0,0.04)' }} />
             </tr>
           </thead>
           <tbody>
@@ -584,32 +584,30 @@ function AggregatedTable({ isMobile, notesMap, openNote }: {
                   style={{ borderBottom: '1px solid var(--line)', background: idx % 2 === 0 ? 'transparent' : 'var(--flour-warm)' }}
                 >
                   <td style={{ padding: 'var(--space-2) var(--space-3)', overflow: 'hidden' }}>
-                    <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{row.productName}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                      <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{row.productName}</div>
+                      <span style={{ opacity: isMobile || hoveredRow === row.sku || rowNoteCount > 0 ? 1 : 0, transition: 'opacity 0.12s', flexShrink: 0 }}>
+                        <NoteAnchor
+                          target={{ type: 'row', key: row.sku, label: row.productName }}
+                          count={rowNoteCount}
+                          onOpen={openNote}
+                        />
+                      </span>
+                    </div>
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap' }}>{row.sku}</div>
                   </td>
                   <Td>{row.opening}</Td><Td>{row.produced}</Td>
                   {activeDestinos.map(d => {
                     const isActive = activeCell?.sku === row.sku && activeCell.destino === d.key
                     const val = row[d.key as DestinoKey]
-                    const cellKey = `${row.sku}:${d.key}`
-                    const cellCount = notesMap.get(cellKey)?.length ?? 0
                     return (
                       <Td key={d.key} highlight={d.key === 'vendido'} clickable={val > 0} active={isActive}
                         onClick={val > 0 ? () => handleAggCellClick(row, d.key as DestinoKey, d.label) : undefined}
-                        noteCount={cellCount}
-                        onNoteClick={(rect) => openNote({ type: 'cell', key: cellKey, label: `${d.label}: ${row.productName}` }, rect)}
                       >{val}</Td>
                     )
                   })}
                   <Td>{row.closing}</Td>
                   <Td accent={row.diferencia !== 0}>{row.diferencia === 0 ? '—' : `+${row.diferencia}`}</Td>
-                  <td style={{ padding: '0 4px', width: '28px', textAlign: 'center', position: 'sticky', right: 0, background: 'inherit', boxShadow: '-2px 0 4px rgba(0,0,0,0.04)', opacity: isMobile || hoveredRow === row.sku || rowNoteCount > 0 ? 1 : 0, transition: 'opacity 0.12s' }}>
-                    <NoteAnchor
-                      target={{ type: 'row', key: row.sku, label: row.productName }}
-                      count={rowNoteCount}
-                      onOpen={openNote}
-                    />
-                  </td>
                 </tr>
               )
             })}
@@ -621,12 +619,11 @@ function AggregatedTable({ isMobile, notesMap, openNote }: {
               {activeDestinos.map(d => <Td key={d.key} bold>{totals[d.key as DestinoKey]}</Td>)}
               <Td bold>{totals.closing}</Td>
               <Td bold accent={totals.diferencia !== 0}>{totals.diferencia === 0 ? '0' : `+${totals.diferencia}`}</Td>
-              <td style={{ width: '28px', position: 'sticky', right: 0, background: 'var(--crumb)', boxShadow: '-2px 0 4px rgba(0,0,0,0.04)' }} />
             </tr>
           </tfoot>
         </table>
       </div>
-      {activeCell && <CellModal cell={activeCell} onClose={() => setActiveCell(null)} />}
+      {activeCell && <CellModal cell={activeCell} onClose={() => setActiveCell(null)} notes={notesMap.get(activeCell.noteKey) ?? []} onAddNote={(content) => addNote({ type: 'cell', key: activeCell.noteKey, label: activeCell.label }, content)} />}
     </div>
   )
 }
@@ -680,13 +677,14 @@ function HistoricalView({ branchCards, selected }: {
 
 // ─── RecDetail (item-level table, today only) ───────────────────────────────
 
-type ActiveCell = { itemIds: string[]; sku: string; destino: ReconciliationDestino; label: string; productName: string; total: number } | null
+type ActiveCell = { itemIds: string[]; sku: string; destino: ReconciliationDestino; label: string; productName: string; total: number; noteKey: string } | null
 
-function RecDetail({ rec, isMobile, onNavigate, onPinContext, notesMap, openNote }: {
+function RecDetail({ rec, isMobile, onNavigate, onPinContext, notesMap, openNote, addNote }: {
   rec: Reconciliation; isMobile: boolean
   onNavigate?: (page: string) => void; onPinContext?: (ctx: ChatContext) => void
   notesMap: NotesMap
   openNote: (target: NoteTarget, rect: DOMRect, onRequestAgent?: () => void) => void
+  addNote: (target: NoteTarget, content: string) => void
 }) {
   const branch = BRANCHES.find(b => b.id === rec.branchId)!
   const activeDestinos = DESTINOS.filter(d => rec.items.some(i => (i[d.key] as number) > 0))
@@ -715,7 +713,7 @@ function RecDetail({ rec, isMobile, onNavigate, onPinContext, notesMap, openNote
     setActiveCell(prev =>
       prev && prev.sku === item.sku && prev.destino === destino
         ? null
-        : { itemIds: [item.id], sku: item.sku, destino, label, productName: item.productName, total }
+        : { itemIds: [item.id], sku: item.sku, destino, label, productName: item.productName, total, noteKey: `${item.id}:${destino}` }
     )
   }
 
@@ -766,7 +764,6 @@ function RecDetail({ rec, isMobile, onNavigate, onPinContext, notesMap, openNote
               ))}
               <Th sortable sortDir={sort.key === 'closing' ? sort.dir : null} onSort={() => handleSort('closing')} width={cw('closing')} onResizeStart={rs('closing')}>Cierre</Th>
               <Th sortable sortDir={sort.key === 'diferencia' ? sort.dir : null} onSort={() => handleSort('diferencia')} width={cw('diferencia')} onResizeStart={rs('diferencia')}>Δ</Th>
-              <th style={{ width: '28px', padding: 0, position: 'sticky', right: 0, background: 'var(--flour)', boxShadow: '-2px 0 4px rgba(0,0,0,0.04)' }} />
             </tr>
           </thead>
           <tbody>
@@ -780,32 +777,30 @@ function RecDetail({ rec, isMobile, onNavigate, onPinContext, notesMap, openNote
                   style={{ borderBottom: '1px solid var(--line)', background: idx % 2 === 0 ? 'transparent' : 'var(--flour-warm)' }}
                 >
                   <td style={{ padding: 'var(--space-2) var(--space-3)', overflow: 'hidden' }}>
-                    <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.productName}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                      <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{item.productName}</div>
+                      <span style={{ opacity: isMobile || hoveredRow === item.id || rowNoteCount > 0 ? 1 : 0, transition: 'opacity 0.12s', flexShrink: 0 }}>
+                        <NoteAnchor
+                          target={{ type: 'row', key: item.id, label: item.productName }}
+                          count={rowNoteCount}
+                          onOpen={(target, rect) => openNote(target, rect, makeRequestAgent)}
+                        />
+                      </span>
+                    </div>
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap' }}>{item.sku}</div>
                   </td>
                   <Td>{item.opening}</Td><Td>{item.produced}</Td>
                   {activeDestinos.map(d => {
                     const isActive = activeCell?.sku === item.sku && activeCell?.destino === d.key
                     const val = item[d.key] as number
-                    const cellKey = `${item.id}:${d.key}`
-                    const cellCount = notesMap.get(cellKey)?.length ?? 0
                     return (
                       <Td key={d.key} highlight={d.key === 'vendido'} clickable={val > 0} active={isActive}
                         onClick={val > 0 ? () => handleCellClick(item, d.key as ReconciliationDestino, d.label) : undefined}
-                        noteCount={cellCount}
-                        onNoteClick={(rect) => openNote({ type: 'cell', key: cellKey, label: `${d.label}: ${item.productName}` }, rect, makeRequestAgent)}
                       >{val}</Td>
                     )
                   })}
                   <Td>{item.closing}</Td>
                   <Td accent={item.diferencia !== 0}>{item.diferencia === 0 ? '—' : `+${item.diferencia}`}</Td>
-                  <td style={{ padding: '0 4px', width: '28px', textAlign: 'center', position: 'sticky', right: 0, background: 'inherit', boxShadow: '-2px 0 4px rgba(0,0,0,0.04)', opacity: isMobile || hoveredRow === item.id || rowNoteCount > 0 ? 1 : 0, transition: 'opacity 0.12s' }}>
-                    <NoteAnchor
-                      target={{ type: 'row', key: item.id, label: item.productName }}
-                      count={rowNoteCount}
-                      onOpen={(target, rect) => openNote(target, rect, makeRequestAgent)}
-                    />
-                  </td>
                 </tr>
               )
             })}
@@ -820,13 +815,12 @@ function RecDetail({ rec, isMobile, onNavigate, onPinContext, notesMap, openNote
               ))}
               <Td bold>{rec.items.reduce((s, i) => s + i.closing, 0)}</Td>
               <Td bold accent={rec.totalDiferencia !== 0}>{rec.totalDiferencia === 0 ? '0' : `+${rec.totalDiferencia}`}</Td>
-              <td style={{ width: '28px', position: 'sticky', right: 0, background: 'var(--crumb)', boxShadow: '-2px 0 4px rgba(0,0,0,0.04)' }} />
             </tr>
           </tfoot>
         </table>
       </div>
 
-      {activeCell && <CellModal cell={activeCell} onClose={() => setActiveCell(null)} />}
+      {activeCell && <CellModal cell={activeCell} onClose={() => setActiveCell(null)} notes={notesMap.get(activeCell.noteKey) ?? []} onAddNote={(content) => addNote({ type: 'cell', key: activeCell.noteKey, label: activeCell.label }, content)} onRequestAgent={makeRequestAgent} />}
     </div>
   )
 }
@@ -951,10 +945,25 @@ const SOURCE_META: Record<string, { icon: string; color: string; label: string }
   sistema:  { icon: '⚙', color: 'var(--bran)',         label: 'Sistema' },
 }
 
-function CellModal({ cell, onClose }: { cell: NonNullable<ActiveCell>; onClose: () => void }) {
+function CellModal({ cell, onClose, notes = [], onAddNote, onRequestAgent }: {
+  cell: NonNullable<ActiveCell>; onClose: () => void
+  notes?: NoteEntry[]; onAddNote?: (content: string) => void; onRequestAgent?: () => void
+}) {
+  const [noteInput, setNoteInput] = useState('')
   const events: ItemEvent[] = cell.itemIds.flatMap(id => getItemEvents(id, cell.destino))
   const registeredTotal = events.reduce((s, e) => s + e.quantity, 0)
   const unaccounted     = cell.total - registeredTotal
+
+  const handleSaveNote = () => {
+    if (!noteInput.trim() || !onAddNote) return
+    onAddNote(noteInput.trim())
+    setNoteInput('')
+  }
+  const handleRequestAgent = () => {
+    if (noteInput.trim() && onAddNote) { onAddNote(noteInput.trim()); setNoteInput('') }
+    onRequestAgent?.()
+    onClose()
+  }
 
   return (
     <>
@@ -1053,6 +1062,57 @@ function CellModal({ cell, onClose }: { cell: NonNullable<ActiveCell>; onClose: 
               </div>
             </div>
           )}
+
+          <div style={{ marginTop: 'var(--space-4)', borderTop: '1px solid var(--line)', paddingTop: 'var(--space-3)' }}>
+            <div style={{ fontSize: '10px', fontWeight: 'var(--weight-bold)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--bran)', marginBottom: 'var(--space-2)' }}>Notas</div>
+            {notes.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
+                {notes.map(note => (
+                  <div key={note.id} style={{ borderLeft: '2px solid var(--babka-blue)', paddingLeft: 'var(--space-3)' }}>
+                    <div style={{ fontSize: '10px', color: 'var(--bran)', marginBottom: '2px' }}>{note.actor} · {note.time}</div>
+                    <div style={{ fontSize: 'var(--text-sm)', color: 'var(--ink)', lineHeight: 1.4 }}>{note.content}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <textarea
+              value={noteInput}
+              onChange={e => setNoteInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveNote() } }}
+              placeholder="Añadir nota..."
+              style={{
+                width: '100%', padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--r-md)',
+                border: '1px solid var(--line)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+                color: 'var(--ink)', resize: 'none', minHeight: '52px',
+                background: 'var(--flour-warm)', boxSizing: 'border-box',
+              } as React.CSSProperties}
+            />
+            <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
+              <button
+                onClick={handleSaveNote}
+                disabled={!noteInput.trim()}
+                style={{
+                  flex: 1, padding: '6px var(--space-3)', borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--line)',
+                  background: noteInput.trim() ? 'var(--babka-blue)' : 'var(--line)',
+                  color: noteInput.trim() ? '#fff' : 'var(--bran)',
+                  fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+                  fontWeight: 'var(--weight-bold)', cursor: noteInput.trim() ? 'pointer' : 'default',
+                }}
+              >Guardar</button>
+              {onRequestAgent && (notes.length > 0 || noteInput.trim()) && (
+                <button
+                  onClick={handleRequestAgent}
+                  style={{
+                    flex: 1, padding: '6px var(--space-3)', borderRadius: 'var(--r-md)',
+                    border: '1px solid var(--babka-blue)', background: 'transparent',
+                    color: 'var(--babka-blue)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+                    fontWeight: 'var(--weight-bold)', cursor: 'pointer',
+                  }}
+                >Dante →</button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </>
@@ -1060,6 +1120,14 @@ function CellModal({ cell, onClose }: { cell: NonNullable<ActiveCell>; onClose: 
 }
 
 // ─── Contextual annotation components ──────────────────────────────────────
+
+function BubbleIcon({ size = 11 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 12 12" fill="currentColor">
+      <path d="M1 2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H6.5L4.5 10V8H2a1 1 0 0 1-1-1V2z"/>
+    </svg>
+  )
+}
 
 function NoteAnchor({ target, count, onOpen }: {
   target: NoteTarget; count: number
@@ -1087,7 +1155,7 @@ function NoteAnchor({ target, count, onOpen }: {
         fontFamily: 'var(--font-body)',
       }}
     >
-      <span style={{ fontSize: '10px' }}>✎</span>
+      <BubbleIcon />
       {count > 0 && (
         <span style={{ fontSize: '9px', fontWeight: 'var(--weight-bold)', fontFamily: 'var(--font-mono)' }}>
           {count}
