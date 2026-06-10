@@ -3,11 +3,12 @@ import { BRANCHES, RECONCILIATIONS, BRANCH_SUMMARIES, HITL_REQUESTS } from '../f
 import { getItemEvents } from '../fixtures/events'
 import { getSnapshotsForDate } from '../fixtures/history'
 import { useBreakpoint } from '../hooks/useBreakpoint'
-import type { BranchId, Reconciliation, ReconciliationItem, ReconciliationDestino, ItemEvent } from '../types'
+import type { BranchId, Reconciliation, ReconciliationItem, ReconciliationDestino, ItemEvent, ChatContext } from '../types'
 
 interface ConciliacionesProps {
   initialBranchId?: BranchId
   onNavigate?: (page: string) => void
+  onPinContext?: (ctx: ChatContext) => void
 }
 
 const TODAY = '2026-06-08'
@@ -44,6 +45,7 @@ type AggRow = {
 type DestinoKey = 'vendido' | 'traspaso' | 'merma' | 'personal' | 'evento' | 'muestra' | 'devolucion'
 type SortDir = 'asc' | 'desc' | null
 type ColKey = 'productName' | 'opening' | 'produced' | 'closing' | 'diferencia' | DestinoKey
+type RecNote = { actor: string; time: string; content: string }
 
 const COL_DEFAULTS: Record<string, number> = {
   productName: 150, opening: 65, produced: 65, closing: 65, diferencia: 60,
@@ -79,7 +81,7 @@ function formatDate(isoDate: string) {
   }).toUpperCase()
 }
 
-export function Conciliaciones({ initialBranchId, onNavigate }: ConciliacionesProps) {
+export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: ConciliacionesProps) {
   const { isMobile } = useBreakpoint()
 
   const [selectedDate, setSelectedDate]     = useState(TODAY)
@@ -156,7 +158,7 @@ export function Conciliaciones({ initialBranchId, onNavigate }: ConciliacionesPr
             <AlertBanner rec={selectedRec} onNavigate={onNavigate} />
           </div>
         )}
-        <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={true} />
+        <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={true} onNavigate={onNavigate} onPinContext={onPinContext} />
       </div>
     )
   }
@@ -208,7 +210,7 @@ export function Conciliaciones({ initialBranchId, onNavigate }: ConciliacionesPr
                 <AlertBanner rec={selectedRec} onNavigate={onNavigate} />
               </div>
             )}
-            <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={isMobile} />
+            <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={isMobile} onNavigate={onNavigate} onPinContext={onPinContext} />
           </>
         ) : null}
       </div>
@@ -606,10 +608,11 @@ function HistoricalView({ branchCards, selected }: {
 
 type ActiveCell = { itemIds: string[]; sku: string; destino: ReconciliationDestino; label: string; productName: string; total: number } | null
 
-function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }) {
+function RecDetail({ rec, isMobile, onNavigate, onPinContext }: { rec: Reconciliation; isMobile: boolean; onNavigate?: (page: string) => void; onPinContext?: (ctx: ChatContext) => void }) {
   const branch = BRANCHES.find(b => b.id === rec.branchId)!
   const activeDestinos = DESTINOS.filter(d => rec.items.some(i => (i[d.key] as number) > 0))
   const [activeCell, setActiveCell] = useState<ActiveCell>(null)
+  const [notes, setNotes] = useState<RecNote[]>([])
   const [sort, setSort] = useState<{ key: ColKey | null; dir: SortDir }>({ key: null, dir: null })
   const { colWidths, startResize } = useColResize()
 
@@ -657,6 +660,13 @@ function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }
           <DeltaBadge value={rec.totalDiferencia} />
         </div>
       </div>
+
+      <ReconciliationNotes notes={notes} onAddNote={(content) => setNotes([...notes, { actor: 'Gerente', time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }), content }])} onRequestAgent={() => {
+        if (onPinContext && onNavigate) {
+          onPinContext({ type: 'reconciliation', reconciliationId: rec.id, branchId: rec.branchId, branchName: branch.name, totalDiferencia: rec.totalDiferencia, closedBy: rec.closedBy, closedAt: rec.closedAt })
+          onNavigate('chat')
+        }
+      }} />
 
       <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: isMobile ? '480px' : 'auto' }}>
@@ -918,6 +928,67 @@ function CellModal({ cell, onClose }: { cell: NonNullable<ActiveCell>; onClose: 
         </div>
       </div>
     </>
+  )
+}
+
+// ─── Reconciliation notes section ───────────────────────────────────────────
+
+function ReconciliationNotes({ notes, onAddNote, onRequestAgent }: { notes: RecNote[]; onAddNote: (content: string) => void; onRequestAgent: () => void }) {
+  const [input, setInput] = useState('')
+  const handleSave = () => {
+    if (input.trim()) {
+      onAddNote(input.trim())
+      setInput('')
+    }
+  }
+  return (
+    <div style={{ padding: 'var(--space-4)', background: 'var(--flour)', borderBottom: '1px solid var(--line)' }}>
+      <div style={{ marginBottom: notes.length > 0 ? 'var(--space-4)' : '0' }}>
+        <div style={{ fontSize: '10px', fontWeight: 'var(--weight-bold)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--bran)', marginBottom: 'var(--space-2)' }}>
+          NOTAS {notes.length > 0 && `(${notes.length})`}
+        </div>
+        {notes.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', marginBottom: 'var(--space-4)' }}>
+            {notes.map((note, idx) => (
+              <div key={idx} style={{
+                padding: 'var(--space-3)',
+                background: 'var(--flour-warm)',
+                borderRadius: 'var(--r-md)',
+                borderLeft: '3px solid var(--babka-blue)',
+              }}>
+                <div style={{ fontSize: '10px', color: 'var(--bran)', marginBottom: '4px' }}>
+                  {note.actor} · {note.time}
+                </div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--ink)', lineHeight: 1.5 }}>
+                  {note.content}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        <textarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Agregar nota..." style={{
+          width: '100%', padding: 'var(--space-3)', borderRadius: 'var(--r-md)',
+          border: '1px solid var(--line)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+          color: 'var(--ink)', resize: 'vertical', minHeight: '60px',
+        }} />
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <button onClick={handleSave} disabled={!input.trim()} style={{
+            flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--r-md)',
+            border: '1px solid var(--line)', background: input.trim() ? 'var(--babka-blue)' : 'var(--line)',
+            color: input.trim() ? '#fff' : 'var(--bran)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+            fontWeight: 'var(--weight-bold)', cursor: input.trim() ? 'pointer' : 'default',
+          }}>Guardar nota</button>
+          <button onClick={onRequestAgent} style={{
+            flex: 1, padding: 'var(--space-3)', borderRadius: 'var(--r-md)',
+            border: '1px solid var(--babka-blue)', background: 'transparent',
+            color: 'var(--babka-blue)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+            fontWeight: 'var(--weight-bold)', cursor: 'pointer',
+          }}>Pedir a Dante →</button>
+        </div>
+      </div>
+    </div>
   )
 }
 

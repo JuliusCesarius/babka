@@ -114,6 +114,19 @@ export interface HITLRequest {
   agentHypothesis?: string
 }
 
+export interface ReconciliationContext {
+  type: 'reconciliation'
+  reconciliationId: string
+  branchId: BranchId
+  branchName: string
+  totalDiferencia: number
+  closedBy?: string
+  closedAt?: string
+  notes?: string
+}
+
+export type ChatContext = HITLRequest | ReconciliationContext
+
 export type WhatsAppRole = 'user' | 'agent' | 'system'
 
 export type MessageStatus = 'enviado' | 'recibido' | 'leido'
