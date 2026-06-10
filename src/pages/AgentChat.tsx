@@ -3,7 +3,7 @@ import { INITIAL_MESSAGES, getSimulatedResponse } from '../fixtures/chat'
 import { useBreakpoint } from '../hooks/useBreakpoint'
 import type { ChatMessage, ChatCard } from '../fixtures/chat'
 import type { UserRole } from '../App'
-import type { HITLRequest } from '../types'
+import type { ChatContext } from '../types'
 
 const OPS_QUICK_ACTIONS = [
   'Resumen del día',
@@ -40,7 +40,7 @@ let msgCounter = 100
 
 export function AgentChat({ role = 'ops', pinnedContext, onClearContext }: {
   role?: UserRole
-  pinnedContext?: HITLRequest | null
+  pinnedContext?: ChatContext | null
   onClearContext?: () => void
 }) {
   const { isMobile } = useBreakpoint()
@@ -256,9 +256,12 @@ const HITL_TYPE_LABELS: Record<string, string> = {
 }
 
 function PinnedContextCard({ request, onClear, isMobile }: {
-  request: HITLRequest; onClear: () => void; isMobile: boolean
+  request: ChatContext; onClear: () => void; isMobile: boolean
 }) {
   const pad = isMobile ? 'var(--space-3) var(--space-4)' : 'var(--space-3) var(--space-6)'
+  const isHTIL = 'type' in request && request.type !== 'reconciliation'
+  const isReconciliation = 'type' in request && request.type === 'reconciliation'
+
   return (
     <div style={{
       padding: pad,
@@ -288,16 +291,16 @@ function PinnedContextCard({ request, onClear, isMobile }: {
               padding: '1px 8px', borderRadius: 'var(--r-pill)', fontFamily: 'var(--font-body)',
               fontWeight: 'var(--weight-medium)',
             }}>
-              {HITL_TYPE_LABELS[request.type] ?? request.type}
+              {isReconciliation ? 'Conciliación' : isHTIL ? (HITL_TYPE_LABELS[request.type] ?? request.type) : 'Contexto'}
             </span>
           </div>
           <div style={{
             fontSize: 'var(--text-xs)', color: 'var(--ink)', fontWeight: 'var(--weight-medium)',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           }}>
-            {request.description}
+            {isReconciliation ? `${request.branchName} · Δ ${request.totalDiferencia === 0 ? '0' : `+${request.totalDiferencia}`}` : isHTIL ? request.description : 'Contexto'}
           </div>
-          {request.agentMessage && (
+          {isHTIL && 'agentMessage' in request && request.agentMessage && (
             <div style={{
               fontSize: '11px', color: 'var(--bran)', marginTop: '2px',
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
