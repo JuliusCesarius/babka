@@ -1146,13 +1146,15 @@ function NoteAnchor({ target, count, onOpen }: {
         background: count > 0 ? 'rgba(59,130,246,0.1)' : 'none',
         border: count > 0 ? '1px solid rgba(59,130,246,0.25)' : '1px solid transparent',
         cursor: 'pointer',
-        padding: '1px 5px',
+        padding: '6px 8px',
+        minWidth: '28px', minHeight: '28px',
         borderRadius: 'var(--r-sm)',
-        display: 'inline-flex', alignItems: 'center', gap: '3px',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '3px',
         color: count > 0 ? 'var(--babka-blue)' : 'var(--bran)',
         fontSize: '11px', lineHeight: 1,
         transition: 'all 0.12s',
         fontFamily: 'var(--font-body)',
+        flexShrink: 0,
       }}
     >
       <BubbleIcon />
