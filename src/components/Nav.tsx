@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { HITL_REQUESTS } from '../fixtures/branches'
-import { RoleToggle } from './TopBar'
 import type { UserRole } from '../App'
 
 interface NavProps {
@@ -9,7 +8,6 @@ interface NavProps {
   collapsed?: boolean
   onToggleCollapse?: () => void
   role?: UserRole
-  onRoleChange?: (r: UserRole) => void
 }
 
 const NAV_ITEMS = [
@@ -21,7 +19,7 @@ const NAV_ITEMS = [
   { id: 'chat',           label: 'Clarisa AI',     icon: '✦' },
 ]
 
-export function Nav({ page, onNavigate, collapsed = false, onToggleCollapse, role = 'ops', onRoleChange }: NavProps) {
+export function Nav({ page, onNavigate, collapsed = false, onToggleCollapse, role = 'ops' }: NavProps) {
   const pendingHITL = HITL_REQUESTS.length
   const width = collapsed ? '64px' : '220px'
 
@@ -113,9 +111,6 @@ export function Nav({ page, onNavigate, collapsed = false, onToggleCollapse, rol
       {/* Footer: role toggle + avatar */}
       {!collapsed && (
         <div style={{ marginTop: 'auto', paddingTop: 'var(--space-4)', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-          {onRoleChange && (
-            <RoleToggle role={role} onRoleChange={onRoleChange} />
-          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
             <Avatar letter={role === 'exec' ? 'E' : 'C'} accent={role === 'exec'} />
             <div>

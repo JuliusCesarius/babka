@@ -3,12 +3,14 @@ import { BRANCHES, BRANCH_SUMMARIES } from '../fixtures/branches'
 import { DAILY_SNAPSHOTS } from '../fixtures/history'
 import { HITL_REQUESTS } from '../fixtures/branches'
 import { useBreakpoint } from '../hooks/useBreakpoint'
+import { RoleToggle } from '../components/TopBar'
 import type { BranchId, BranchSummary, DailySnapshot, TrafficLight } from '../types'
 import type { UserRole } from '../App'
 
 interface ResumenProps {
   onNavigate: (page: string, branchId?: BranchId) => void
   role: UserRole
+  onRoleChange: (r: UserRole) => void
 }
 
 type DateFilter = 'hoy' | 'ayer' | 'semana'
@@ -39,12 +41,12 @@ function getSummariesForFilter(filter: DateFilter): Array<BranchSummary | DailyS
   return result
 }
 
-export function Resumen({ onNavigate, role }: ResumenProps) {
-  if (role === 'exec') return <CLevelResumen onNavigate={onNavigate} />
-  return <OperativoResumen onNavigate={onNavigate} />
+export function Resumen({ onNavigate, role, onRoleChange }: ResumenProps) {
+  if (role === 'exec') return <CLevelResumen onNavigate={onNavigate} role={role} onRoleChange={onRoleChange} />
+  return <OperativoResumen onNavigate={onNavigate} role={role} onRoleChange={onRoleChange} />
 }
 
-function OperativoResumen({ onNavigate }: { onNavigate: ResumenProps['onNavigate'] }) {
+function OperativoResumen({ onNavigate, role, onRoleChange }: { onNavigate: ResumenProps['onNavigate']; role: UserRole; onRoleChange: (r: UserRole) => void }) {
   const { isMobile, isTablet } = useBreakpoint()
   const isNarrow = isMobile || isTablet
   const [filter, setFilter] = useState<DateFilter>('hoy')
@@ -86,7 +88,10 @@ function OperativoResumen({ onNavigate }: { onNavigate: ResumenProps['onNavigate
               }
             </h1>
           </div>
-          <DatePicker value={filter} onChange={setFilter} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <DatePicker value={filter} onChange={setFilter} />
+            <RoleToggle role={role} onRoleChange={onRoleChange} light />
+          </div>
         </div>
 
         {/* KPI strip */}
@@ -515,7 +520,7 @@ function computeCLevelData(): CLevelBranch[] {
   })
 }
 
-function CLevelResumen({ onNavigate }: { onNavigate: ResumenProps['onNavigate'] }) {
+function CLevelResumen({ onNavigate, role, onRoleChange }: { onNavigate: ResumenProps['onNavigate']; role: UserRole; onRoleChange: (r: UserRole) => void }) {
   const { isMobile } = useBreakpoint()
   const branches = computeCLevelData()
 
@@ -544,8 +549,11 @@ function CLevelResumen({ onNavigate }: { onNavigate: ResumenProps['onNavigate'] 
           <h1 style={{ fontSize: isMobile ? 'var(--text-xl)' : 'var(--text-3xl)', lineHeight: 1.1 }}>
             Semana 2–9 jun 2026
           </h1>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--bran)', fontFamily: 'var(--font-body)' }}>
-            Última actualización: hoy 9:18 pm
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--bran)', fontFamily: 'var(--font-body)' }}>
+              Última actualización: hoy 9:18 pm
+            </div>
+            <RoleToggle role={role} onRoleChange={onRoleChange} light />
           </div>
         </div>
       </div>

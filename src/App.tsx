@@ -27,8 +27,8 @@ export default function App() {
   }
 
   return (
-    <Layout page={page} onNavigate={navigate} role={role} onRoleChange={setRole}>
-      {page === 'resumen'        && <Resumen onNavigate={navigate} role={role} />}
+    <Layout page={page} onNavigate={navigate} role={role}>
+      {page === 'resumen'        && <Resumen onNavigate={navigate} role={role} onRoleChange={setRole} />}
       {page === 'conciliaciones' && <Conciliaciones initialBranchId={selectedBranchId} onNavigate={navigate} onPinContext={handlePinContext} />}
       {page === 'calendario'     && <Calendario />}
       {page === 'hitl'           && <HITL onNavigate={navigate} onPinContext={handlePinContext} />}
