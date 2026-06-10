@@ -113,7 +113,7 @@ export function RoleToggle({ role, onRoleChange, compact = false }: {
             transition: 'all 0.15s',
           }}
         >
-          {r === 'ops' ? 'OPS' : 'EXEC'}
+          {r === 'ops' ? 'Admin' : 'CEO'}
         </button>
       ))}
     </div>
