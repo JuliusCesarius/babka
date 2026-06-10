@@ -28,7 +28,9 @@ export function Nav({ page, onNavigate, collapsed = false, onToggleCollapse, rol
   return (
     <nav style={{
       width,
-      minHeight: '100vh',
+      height: '100vh',
+      position: 'sticky',
+      top: 0,
       background: 'var(--ink)',
       display: 'flex',
       flexDirection: 'column',
@@ -37,6 +39,7 @@ export function Nav({ page, onNavigate, collapsed = false, onToggleCollapse, rol
       flexShrink: 0,
       transition: 'width 0.3s var(--ease-out)',
       overflowX: 'hidden',
+      overflowY: 'auto',
     }}>
       {/* Wordmark / icon + collapse toggle */}
       <div style={{

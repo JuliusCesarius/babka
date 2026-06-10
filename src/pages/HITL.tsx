@@ -222,6 +222,8 @@ function SummaryPanel({ request, isMobile, onInvestigate, onDismissRequest, onAp
   onApprove: () => void; onOtherAction: () => void
 }) {
   const pad = isMobile ? 'var(--space-4)' : 'var(--space-6)'
+  const [selectedAction, setSelectedAction] = useState<string | null>(null)
+
   return (
     <div style={{ padding: pad, display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       {request.agentMessage && (
@@ -239,16 +241,33 @@ function SummaryPanel({ request, isMobile, onInvestigate, onDismissRequest, onAp
         {request.details}
       </p>
 
-      {request.suggestedAction && (
+      {request.suggestedAction && request.suggestedAction.length > 0 && (
         <div style={{
           background: 'var(--crumb)', borderRadius: 'var(--r-md)',
           padding: 'var(--space-3) var(--space-4)',
-          display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)',
+          display: 'flex', flexDirection: 'column', gap: 'var(--space-2)',
         }}>
-          <span style={{ fontSize: '13px', marginTop: '1px', flexShrink: 0 }}>→</span>
-          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--ink-soft)' }}>
-            <strong style={{ color: 'var(--ink)' }}>Acción sugerida:</strong> {request.suggestedAction}
-          </span>
+          <div style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-bold)', color: 'var(--ink)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Acción sugerida
+          </div>
+          {request.suggestedAction.map((option, i) => (
+            <label key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
+              cursor: 'pointer', padding: 'var(--space-2) 0',
+            }}>
+              <input
+                type="radio"
+                name={`action-${request.id}`}
+                value={option}
+                checked={selectedAction === option}
+                onChange={() => setSelectedAction(option)}
+                style={{ accentColor: 'var(--babka-blue)', width: '15px', height: '15px', flexShrink: 0, cursor: 'pointer' }}
+              />
+              <span style={{ fontSize: 'var(--text-sm)', color: selectedAction === option ? 'var(--ink)' : 'var(--ink-soft)', fontWeight: selectedAction === option ? 'var(--weight-medium)' : undefined }}>
+                {option}
+              </span>
+            </label>
+          ))}
         </div>
       )}
 
