@@ -411,6 +411,7 @@ function AlertBanner({ rec, onNavigate }: {
 
 function AggregatedTable({ isMobile }: { isMobile: boolean }) {
   const [sort, setSort] = useState<{ key: ColKey | null; dir: SortDir }>({ key: null, dir: null })
+  const [activeCell, setActiveCell] = useState<ActiveCell>(null)
   const { colWidths, startResize } = useColResize()
 
   const handleSort = (key: ColKey) => {
@@ -421,8 +422,13 @@ function AggregatedTable({ isMobile }: { isMobile: boolean }) {
   }
 
   const rowMap = new Map<string, AggRow>()
+  const skuToItemIds = new Map<string, string[]>()
   for (const rec of RECONCILIATIONS) {
     for (const item of rec.items) {
+      const ids = skuToItemIds.get(item.sku) ?? []
+      if (!ids.length) skuToItemIds.set(item.sku, ids)
+      if (!ids.includes(item.id)) ids.push(item.id)
+
       const ex = rowMap.get(item.sku)
       if (ex) {
         ex.opening    += item.opening;    ex.produced   += item.produced
@@ -440,6 +446,17 @@ function AggregatedTable({ isMobile }: { isMobile: boolean }) {
         })
       }
     }
+  }
+
+  const handleAggCellClick = (row: AggRow, destino: DestinoKey, label: string) => {
+    const val = row[destino]
+    if (val === 0) return
+    const ids = skuToItemIds.get(row.sku) ?? []
+    setActiveCell(prev =>
+      prev && prev.sku === row.sku && prev.destino === (destino as ReconciliationDestino)
+        ? null
+        : { itemIds: ids, sku: row.sku, destino: destino as ReconciliationDestino, label, productName: row.productName, total: val }
+    )
   }
   let rows = Array.from(rowMap.values()).sort((a, b) => b.vendido - a.vendido)
   if (sort.key && sort.dir) {
@@ -508,9 +525,15 @@ function AggregatedTable({ isMobile }: { isMobile: boolean }) {
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap' }}>{row.sku}</div>
                 </td>
                 <Td>{row.opening}</Td><Td>{row.produced}</Td>
-                {activeDestinos.map(d => (
-                  <Td key={d.key} highlight={d.key === 'vendido'}>{row[d.key as DestinoKey]}</Td>
-                ))}
+                {activeDestinos.map(d => {
+                  const isActive = activeCell?.sku === row.sku && activeCell.destino === d.key
+                  const val = row[d.key as DestinoKey]
+                  return (
+                    <Td key={d.key} highlight={d.key === 'vendido'} clickable={val > 0} active={isActive}
+                      onClick={val > 0 ? () => handleAggCellClick(row, d.key as DestinoKey, d.label) : undefined}
+                    >{val}</Td>
+                  )
+                })}
                 <Td>{row.closing}</Td>
                 <Td accent={row.diferencia !== 0}>{row.diferencia === 0 ? '—' : `+${row.diferencia}`}</Td>
               </tr>
@@ -527,6 +550,7 @@ function AggregatedTable({ isMobile }: { isMobile: boolean }) {
           </tfoot>
         </table>
       </div>
+      {activeCell && <CellModal cell={activeCell} onClose={() => setActiveCell(null)} />}
     </div>
   )
 }
@@ -580,7 +604,7 @@ function HistoricalView({ branchCards, selected }: {
 
 // ─── RecDetail (item-level table, today only) ───────────────────────────────
 
-type ActiveCell = { itemId: string; destino: ReconciliationDestino; label: string; productName: string; total: number } | null
+type ActiveCell = { itemIds: string[]; sku: string; destino: ReconciliationDestino; label: string; productName: string; total: number } | null
 
 function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }) {
   const branch = BRANCHES.find(b => b.id === rec.branchId)!
@@ -599,9 +623,11 @@ function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }
   const handleCellClick = (item: ReconciliationItem, destino: ReconciliationDestino, label: string) => {
     const total = item[destino] as number
     if (total === 0) return
-    const key = `${item.id}:${destino}`
-    const currentKey = activeCell ? `${activeCell.itemId}:${activeCell.destino}` : null
-    setActiveCell(currentKey === key ? null : { itemId: item.id, destino, label, productName: item.productName, total })
+    setActiveCell(prev =>
+      prev && prev.sku === item.sku && prev.destino === destino
+        ? null
+        : { itemIds: [item.id], sku: item.sku, destino, label, productName: item.productName, total }
+    )
   }
 
   let items = rec.items
@@ -655,7 +681,7 @@ function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }
                 </td>
                 <Td>{item.opening}</Td><Td>{item.produced}</Td>
                 {activeDestinos.map(d => {
-                  const isActive = activeCell?.itemId === item.id && activeCell?.destino === d.key
+                  const isActive = activeCell?.sku === item.sku && activeCell?.destino === d.key
                   const val = item[d.key] as number
                   return (
                     <Td key={d.key} highlight={d.key === 'vendido'} clickable={val > 0} active={isActive}
@@ -683,7 +709,7 @@ function RecDetail({ rec, isMobile }: { rec: Reconciliation; isMobile: boolean }
         </table>
       </div>
 
-      {activeCell && <CellEventPanel cell={activeCell} onClose={() => setActiveCell(null)} />}
+      {activeCell && <CellModal cell={activeCell} onClose={() => setActiveCell(null)} />}
     </div>
   )
 }
@@ -764,14 +790,18 @@ function Td({ children, bold, highlight, accent, clickable, active, onClick }: {
         cursor: clickable ? 'pointer' : 'default',
         background: active ? 'rgba(59,130,246,0.1)' : hovered ? 'rgba(59,130,246,0.05)' : 'transparent',
         borderBottom: active ? '2px solid var(--babka-blue)' : '2px solid transparent',
-        transition: 'background 0.12s, border-color 0.12s',
+        transition: 'background 0.12s',
         position: 'relative',
       }}
     >
-      {children}
-      {clickable && !active && (
-        <span style={{ fontSize: '8px', color: 'var(--bran)', marginLeft: '3px', verticalAlign: 'middle', opacity: hovered ? 1 : 0, transition: 'opacity 0.12s' }}>▾</span>
-      )}
+      {clickable ? (
+        <span style={{
+          textDecoration: 'underline',
+          textDecorationStyle: 'dotted',
+          textDecorationColor: 'rgba(59,130,246,0.4)',
+          textUnderlineOffset: '2px',
+        }}>{children}</span>
+      ) : children}
     </td>
   )
 }
@@ -783,87 +813,112 @@ const SOURCE_META: Record<string, { icon: string; color: string; label: string }
   sistema:  { icon: '⚙', color: 'var(--bran)',         label: 'Sistema' },
 }
 
-function CellEventPanel({ cell, onClose }: { cell: NonNullable<ActiveCell>; onClose: () => void }) {
-  const events: ItemEvent[] = getItemEvents(cell.itemId, cell.destino)
+function CellModal({ cell, onClose }: { cell: NonNullable<ActiveCell>; onClose: () => void }) {
+  const events: ItemEvent[] = cell.itemIds.flatMap(id => getItemEvents(id, cell.destino))
   const registeredTotal = events.reduce((s, e) => s + e.quantity, 0)
   const unaccounted     = cell.total - registeredTotal
 
   return (
-    <div style={{ borderTop: '2px solid var(--babka-blue)', background: 'var(--flour-warm)', padding: 'var(--space-4)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
-        <div>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 'var(--weight-bold)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--babka-blue)' }}>
-            {cell.label}
-          </span>
-          <span style={{ fontSize: '10px', color: 'var(--bran)', margin: '0 6px' }}>·</span>
-          <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--bran)' }}>
-            {cell.productName}
-          </span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-black)', color: 'var(--ink)' }}>
-            {cell.total} pzas
-          </span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--bran)', fontSize: '16px', lineHeight: 1, padding: '0 2px' }}>×</button>
-        </div>
-      </div>
-
-      {events.length === 0 ? (
-        <div style={{ padding: 'var(--space-3) 0', fontSize: 'var(--text-xs)', color: 'var(--bran)', fontStyle: 'italic' }}>
-          Sin registros individuales — total ingresado manualmente al cierre
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {events.map(ev => {
-            const meta = SOURCE_META[ev.source] ?? SOURCE_META.manual
-            const time = new Date(ev.time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
-            return (
-              <div key={ev.id} style={{
-                display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
-                padding: '6px 10px', borderRadius: 'var(--r-md)',
-                background: 'var(--flour)', border: '1px solid var(--line)',
-              }}>
-                <span style={{ fontSize: '13px', color: meta.color, flexShrink: 0, width: '18px', textAlign: 'center' }}>{meta.icon}</span>
-                <span style={{ fontSize: '10px', fontWeight: 'var(--weight-bold)', color: meta.color, background: `${meta.color}18`, padding: '1px 6px', borderRadius: 'var(--r-pill)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                  {meta.label}
-                </span>
-                <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: 'var(--ink)' }}>{ev.description}</span>
-                {ev.operator && (
-                  <span style={{ fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap', flexShrink: 0 }}>{ev.operator}</span>
-                )}
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap', flexShrink: 0 }}>{time}</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', color: 'var(--ink)', flexShrink: 0, minWidth: '28px', textAlign: 'right' }}>
-                  {ev.quantity}
-                </span>
-              </div>
-            )
-          })}
-
-          {unaccounted > 0 && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
-              padding: '6px 10px', borderRadius: 'var(--r-md)',
-              background: 'rgba(220,80,50,0.08)', border: '1px solid rgba(220,80,50,0.3)',
-            }}>
-              <span style={{ fontSize: '13px', color: 'var(--babka-orange)', width: '18px', textAlign: 'center' }}>⚠</span>
-              <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: 'var(--babka-orange)', fontWeight: 'var(--weight-medium)' }}>
-                {unaccounted} pzas sin evento registrado
-              </span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', color: 'var(--babka-orange)' }}>
-                +{unaccounted}
-              </span>
-            </div>
-          )}
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', paddingTop: '4px', borderTop: '1px solid var(--line)', marginTop: '2px' }}>
-            <span style={{ fontSize: '10px', color: 'var(--bran)' }}>{events.length} evento{events.length !== 1 ? 's' : ''} · total registrado</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-black)', color: registeredTotal === cell.total ? '#16a34a' : 'var(--wheat-deep)' }}>
-              {registeredTotal} / {cell.total}
+    <>
+      <div onClick={onClose} style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(26,23,20,0.4)',
+        backdropFilter: 'blur(2px)',
+        zIndex: 300,
+      }} />
+      <div style={{
+        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: '640px',
+        maxHeight: '70vh',
+        background: 'var(--flour)',
+        borderRadius: 'var(--r-lg) var(--r-lg) 0 0',
+        boxShadow: 'var(--shadow-xl)',
+        zIndex: 301,
+        display: 'flex', flexDirection: 'column',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          padding: 'var(--space-4)',
+          borderBottom: '2px solid var(--babka-blue)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexShrink: 0,
+        }}>
+          <div>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 'var(--weight-bold)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--babka-blue)' }}>
+              {cell.label}
+            </span>
+            <span style={{ fontSize: '10px', color: 'var(--bran)', margin: '0 6px' }}>·</span>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--bran)' }}>
+              {cell.productName}
             </span>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-black)', color: 'var(--ink)' }}>
+              {cell.total} pzas
+            </span>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--bran)', fontSize: '16px', lineHeight: 1, padding: '0 2px' }}>×</button>
+          </div>
         </div>
-      )}
-    </div>
+
+        <div style={{ overflowY: 'auto', padding: 'var(--space-4)', flex: 1 }}>
+          {events.length === 0 ? (
+            <div style={{ padding: 'var(--space-3) 0', fontSize: 'var(--text-xs)', color: 'var(--bran)', fontStyle: 'italic' }}>
+              Sin registros individuales — total ingresado manualmente al cierre
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {events.map(ev => {
+                const meta = SOURCE_META[ev.source] ?? SOURCE_META.manual
+                const time = new Date(ev.time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+                return (
+                  <div key={ev.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
+                    padding: '6px 10px', borderRadius: 'var(--r-md)',
+                    background: 'var(--flour-warm)', border: '1px solid var(--line)',
+                  }}>
+                    <span style={{ fontSize: '13px', color: meta.color, flexShrink: 0, width: '18px', textAlign: 'center' }}>{meta.icon}</span>
+                    <span style={{ fontSize: '10px', fontWeight: 'var(--weight-bold)', color: meta.color, background: `${meta.color}18`, padding: '1px 6px', borderRadius: 'var(--r-pill)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      {meta.label}
+                    </span>
+                    <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: 'var(--ink)' }}>{ev.description}</span>
+                    {ev.operator && (
+                      <span style={{ fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap', flexShrink: 0 }}>{ev.operator}</span>
+                    )}
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap', flexShrink: 0 }}>{time}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', color: 'var(--ink)', flexShrink: 0, minWidth: '28px', textAlign: 'right' }}>
+                      {ev.quantity}
+                    </span>
+                  </div>
+                )
+              })}
+
+              {unaccounted > 0 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 'var(--space-3)',
+                  padding: '6px 10px', borderRadius: 'var(--r-md)',
+                  background: 'rgba(220,80,50,0.08)', border: '1px solid rgba(220,80,50,0.3)',
+                }}>
+                  <span style={{ fontSize: '13px', color: 'var(--babka-orange)', width: '18px', textAlign: 'center' }}>⚠</span>
+                  <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: 'var(--babka-orange)', fontWeight: 'var(--weight-medium)' }}>
+                    {unaccounted} pzas sin evento registrado
+                  </span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-bold)', color: 'var(--babka-orange)' }}>
+                    +{unaccounted}
+                  </span>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', paddingTop: '4px', borderTop: '1px solid var(--line)', marginTop: '2px' }}>
+                <span style={{ fontSize: '10px', color: 'var(--bran)' }}>{events.length} evento{events.length !== 1 ? 's' : ''} · total registrado</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', fontWeight: 'var(--weight-black)', color: registeredTotal === cell.total ? '#16a34a' : 'var(--wheat-deep)' }}>
+                  {registeredTotal} / {cell.total}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   )
 }
 
