@@ -827,11 +827,10 @@ function CellModal({ cell, onClose }: { cell: NonNullable<ActiveCell>; onClose: 
         zIndex: 300,
       }} />
       <div style={{
-        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: '640px',
-        maxHeight: '70vh',
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: '100%', maxWidth: '640px', maxHeight: 'calc(100vh - 40px)',
         background: 'var(--flour)',
-        borderRadius: 'var(--r-lg) var(--r-lg) 0 0',
+        borderRadius: 'var(--r-lg)',
         boxShadow: 'var(--shadow-xl)',
         zIndex: 301,
         display: 'flex', flexDirection: 'column',
