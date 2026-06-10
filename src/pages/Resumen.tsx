@@ -98,7 +98,7 @@ function OperativoResumen({ onNavigate }: { onNavigate: ResumenProps['onNavigate
           <KpiPill label="Descuadre" value={descuadre} color="var(--wheat-deep)" />
           <KpiPill label="Pendientes" value={pendientes} color="var(--babka-orange)" />
           {filter === 'hoy' && (
-            <KpiPill label="HITL" value={HITL_REQUESTS.length} color="var(--babka-blue)" onClick={() => onNavigate('hitl')} />
+            <KpiPill label="Revisiones" value={HITL_REQUESTS.length} color="var(--babka-blue)" onClick={() => onNavigate('hitl')} />
           )}
         </div>
 
@@ -315,7 +315,7 @@ function AgentFeed({ onNavigate }: { onNavigate: (page: string) => void }) {
     { time: '9:18 pm', icon: '✓', color: '#22C55E', label: 'Slowfood procesado', detail: 'Δ=0 · 96 unidades' },
     { time: '9:03 pm', icon: '✓', color: '#22C55E', label: 'Centro procesado',   detail: 'Δ=0 · 184 unidades' },
     { time: '8:55 pm', icon: '✓', color: '#22C55E', label: 'Montes procesado',   detail: 'Δ=0 · 142 unidades' },
-    { time: '8:47 pm', icon: '⚠', color: 'var(--wheat-deep)', label: 'Norte · Δ+4 en HITL', detail: 'Requiere aprobación supervisor', alert: true },
+    { time: '8:47 pm', icon: '⚠', color: 'var(--wheat-deep)', label: 'Norte · Δ+4 en revisión', detail: 'Requiere aprobación supervisor', alert: true },
     { time: '9:12 am', icon: '!', color: 'var(--babka-orange)', label: 'Marista sin reporte', detail: 'Sin actividad desde apertura', alert: true },
   ]
 
@@ -400,7 +400,7 @@ function AgentFeed({ onNavigate }: { onNavigate: (page: string) => void }) {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}
           >
-            <span>{hitlCount} pendientes en HITL</span>
+            <span>{hitlCount} pendientes en Revisiones</span>
             <span style={{ opacity: 0.7 }}>→</span>
           </button>
         </div>
