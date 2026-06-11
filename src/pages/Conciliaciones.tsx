@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
-import { BRANCHES, RECONCILIATIONS, BRANCH_SUMMARIES, HITL_REQUESTS } from '../fixtures/branches'
+import { BRANCHES, RECONCILIATIONS, RECONCILIATIONS_HISTORY, BRANCH_SUMMARIES, HITL_REQUESTS } from '../fixtures/branches'
 import { getItemEvents } from '../fixtures/events'
 import { getSnapshotsForDate } from '../fixtures/history'
 import { useBreakpoint } from '../hooks/useBreakpoint'
@@ -139,6 +139,10 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
     ? RECONCILIATIONS.find(r => r.branchId === selectedBranchId) ?? null
     : null
 
+  const historicalRec = !isToday && selectedBranchId !== 'todas'
+    ? RECONCILIATIONS_HISTORY.find(r => r.branchId === selectedBranchId && r.date === selectedDate) ?? null
+    : null
+
   const handlePrev = () => {
     if (dateIdx > 0) {
       setSelectedDate(AVAILABLE_DATES[dateIdx - 1])
@@ -159,12 +163,15 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
     setSelectedBranchId(id)
     const params = id !== 'todas' ? `?sucursal=${id}` : ''
     window.history.replaceState({ page: 'conciliaciones', branchId: id !== 'todas' ? id : undefined }, '', '/conciliaciones' + params)
-    if (isMobile && id !== 'todas' && isToday) setMobileShowDetail(true)
+    const hasDetail = isToday || RECONCILIATIONS_HISTORY.some(r => r.branchId === id && r.date === selectedDate)
+    if (isMobile && id !== 'todas' && hasDetail) setMobileShowDetail(true)
     else setMobileShowDetail(false)
   }
 
   // Mobile: full-screen detail view
-  if (isMobile && mobileShowDetail && selectedRec) {
+  const mobileRec = selectedRec ?? historicalRec
+  if (isMobile && mobileShowDetail && mobileRec) {
+    const mobileReadOnly = historicalRec !== null || mobileRec.status === 'cerrado'
     return (
       <div>
         <button
@@ -179,12 +186,12 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
         >
           ← Volver
         </button>
-        {(selectedRec.status === 'descuadre' || selectedRec.status === 'pendiente') && (
+        {(mobileRec.status === 'descuadre' || mobileRec.status === 'pendiente') && (
           <div style={{ marginBottom: 'var(--space-3)' }}>
-            <AlertBanner rec={selectedRec} onNavigate={onNavigate} />
+            <AlertBanner rec={mobileRec} onNavigate={onNavigate} />
           </div>
         )}
-        <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={true} onNavigate={onNavigate} onPinContext={onPinContext} notesMap={notesMap} openNote={openNote} addNote={addNote} />
+        <RecDetail key={mobileRec.id} rec={mobileRec} readOnly={mobileReadOnly} isMobile={true} onNavigate={onNavigate} onPinContext={onPinContext} notesMap={notesMap} openNote={openNote} addNote={addNote} />
         {activeNote && (
           <NoteSheet activeNote={activeNote} notes={notesMap.get(activeNote.target.key) ?? []} isMobile={true} onClose={closeNote} onAdd={addNote} />
         )}
@@ -224,7 +231,14 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
       {/* Main content */}
       <div style={{ marginTop: 'var(--space-4)' }}>
         {!isToday ? (
-          <HistoricalView branchCards={branchCards} selected={selectedBranchId} />
+          historicalRec ? (
+            <RecDetail key={historicalRec.id} rec={historicalRec} readOnly isMobile={isMobile} onNavigate={onNavigate} onPinContext={onPinContext} notesMap={notesMap} openNote={openNote} addNote={addNote} />
+          ) : (
+            <HistoricalView
+              branchCards={branchCards} selected={selectedBranchId} onSelect={handleSelectBranch}
+              drillableBranches={new Set(RECONCILIATIONS_HISTORY.filter(r => r.date === selectedDate).map(r => r.branchId))}
+            />
+          )
         ) : selectedBranchId === 'todas' ? (
           <>
             {alertRecs.length > 0 && (
@@ -241,7 +255,7 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
                 <AlertBanner rec={selectedRec} onNavigate={onNavigate} />
               </div>
             )}
-            <RecDetail key={selectedRec.id} rec={selectedRec} isMobile={isMobile} onNavigate={onNavigate} onPinContext={onPinContext} notesMap={notesMap} openNote={openNote} addNote={addNote} />
+            <RecDetail key={selectedRec.id} rec={selectedRec} readOnly={selectedRec.status === 'cerrado'} isMobile={isMobile} onNavigate={onNavigate} onPinContext={onPinContext} notesMap={notesMap} openNote={openNote} addNote={addNote} />
           </>
         ) : null}
       </div>
@@ -640,49 +654,68 @@ const STATUS_LABEL: Record<string, string> = {
   cerrado: 'Cerrado', abierto: 'Abierto', descuadre: 'Descuadre', pendiente: 'Sin reportar',
 }
 
-function HistoricalView({ branchCards, selected }: {
+function HistoricalView({ branchCards, selected, onSelect, drillableBranches }: {
   branchCards: BranchCard[]; selected: BranchId | 'todas'
+  onSelect: (id: BranchId | 'todas') => void
+  drillableBranches: Set<string>
 }) {
   const display = selected === 'todas' ? branchCards : branchCards.filter(c => c.branchId === selected)
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: selected === 'todas' ? 'repeat(auto-fill, minmax(160px, 1fr))' : '1fr',
+      gridTemplateColumns: selected === 'todas' ? 'repeat(auto-fill, minmax(180px, 1fr))' : '1fr',
       gap: 'var(--space-3)',
     }}>
-      {display.map(card => (
-        <div key={card.branchId} style={{
-          background: 'var(--flour)', borderRadius: 'var(--r-lg)',
-          boxShadow: 'var(--shadow-md)', padding: 'var(--space-6)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-2)' }}>
-            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-black)', fontSize: 'var(--text-lg)', color: 'var(--ink)' }}>
-              {card.shortName}
-            </span>
-            <span style={{
-              background: `${STATUS_COLOR[card.status]}20`, color: STATUS_COLOR[card.status],
-              fontSize: '10px', fontWeight: 'var(--weight-bold)', letterSpacing: '0.08em',
-              textTransform: 'uppercase', padding: '3px 10px', borderRadius: 'var(--r-pill)',
-              fontFamily: 'var(--font-body)',
-            }}>
-              {STATUS_LABEL[card.status]}
-            </span>
+      {display.map(card => {
+        const canDrill = drillableBranches.has(card.branchId)
+        return (
+          <div
+            key={card.branchId}
+            onClick={canDrill ? () => onSelect(card.branchId) : undefined}
+            style={{
+              background: 'var(--flour)', borderRadius: 'var(--r-lg)',
+              boxShadow: 'var(--shadow-md)', padding: 'var(--space-6)',
+              cursor: canDrill ? 'pointer' : 'default',
+              border: '1.5px solid', borderColor: 'transparent',
+              transition: 'border-color var(--transition), box-shadow var(--transition)',
+            }}
+            onMouseEnter={canDrill ? e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--babka-blue)' } : undefined}
+            onMouseLeave={canDrill ? e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'transparent' } : undefined}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-2)' }}>
+              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--weight-black)', fontSize: 'var(--text-lg)', color: 'var(--ink)' }}>
+                {card.shortName}
+              </span>
+              <span style={{
+                background: `${STATUS_COLOR[card.status]}20`, color: STATUS_COLOR[card.status],
+                fontSize: '10px', fontWeight: 'var(--weight-bold)', letterSpacing: '0.08em',
+                textTransform: 'uppercase', padding: '3px 10px', borderRadius: 'var(--r-pill)',
+                fontFamily: 'var(--font-body)',
+              }}>
+                {STATUS_LABEL[card.status]}
+              </span>
+            </div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--bran)' }}>
+              {card.totalUnits > 0 ? `${card.totalUnits} unidades` : 'Sin actividad'}
+            </div>
+            {canDrill && (
+              <div style={{ marginTop: 'var(--space-3)', fontSize: 'var(--text-xs)', color: 'var(--babka-blue)', fontWeight: 'var(--weight-bold)' }}>
+                Ver detalle →
+              </div>
+            )}
           </div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 'var(--text-sm)', color: 'var(--bran)' }}>
-            {card.totalUnits > 0 ? `${card.totalUnits} unidades` : 'Sin actividad'}
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
 
-// ─── RecDetail (item-level table, today only) ───────────────────────────────
+// ─── RecDetail ──────────────────────────────────────────────────────────────
 
 type ActiveCell = { itemIds: string[]; sku: string; destino: ReconciliationDestino; label: string; productName: string; total: number; noteKey: string } | null
 
-function RecDetail({ rec, isMobile, onNavigate, onPinContext, notesMap, openNote, addNote }: {
-  rec: Reconciliation; isMobile: boolean
+function RecDetail({ rec, isMobile, readOnly = false, onNavigate, onPinContext, notesMap, openNote, addNote }: {
+  rec: Reconciliation; isMobile: boolean; readOnly?: boolean
   onNavigate?: (page: string) => void; onPinContext?: (ctx: ChatContext) => void
   notesMap: NotesMap
   openNote: (target: NoteTarget, rect: DOMRect, onRequestAgent?: () => void) => void
@@ -734,16 +767,30 @@ function RecDetail({ rec, isMobile, onNavigate, onPinContext, notesMap, openNote
 
   return (
     <div style={{ background: 'var(--flour)', borderRadius: 'var(--r-lg)', boxShadow: 'var(--shadow-md)', overflow: 'hidden' }}>
+      {readOnly && (
+        <div style={{
+          background: 'rgba(34,197,94,0.08)', borderBottom: '1px solid rgba(34,197,94,0.2)',
+          padding: 'var(--space-2) var(--space-4)',
+          display: 'flex', alignItems: 'center', gap: 'var(--space-2)',
+        }}>
+          <span style={{ fontSize: '11px', color: '#16a34a' }}>✓</span>
+          <span style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--weight-bold)', color: '#16a34a', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Cerrado · Solo consulta
+          </span>
+        </div>
+      )}
       <div style={{ padding: isMobile ? 'var(--space-4)' : 'var(--space-6)', borderBottom: '1px solid var(--line)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: '4px' }}>
               <h3 style={{ margin: 0, fontSize: isMobile ? 'var(--text-xl)' : 'var(--text-2xl)' }}>{branch.name}</h3>
-              <NoteAnchor
-                target={{ type: 'branch', key: rec.branchId, label: branch.name }}
-                count={notesMap.get(rec.branchId)?.length ?? 0}
-                onOpen={(target, rect) => openNote(target, rect, makeRequestAgent)}
-              />
+              {!readOnly && (
+                <NoteAnchor
+                  target={{ type: 'branch', key: rec.branchId, label: branch.name }}
+                  count={notesMap.get(rec.branchId)?.length ?? 0}
+                  onOpen={(target, rect) => openNote(target, rect, makeRequestAgent)}
+                />
+              )}
             </div>
             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--bran)' }}>
               {rec.closedBy ? `Cerrado por ${rec.closedBy}` : branch.manager}
@@ -781,13 +828,15 @@ function RecDetail({ rec, isMobile, onNavigate, onPinContext, notesMap, openNote
                   <td style={{ padding: 'var(--space-2) var(--space-3)', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
                       <div style={{ fontWeight: 'var(--weight-medium)', fontSize: 'var(--text-sm)', color: 'var(--ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{item.productName}</div>
-                      <span style={{ opacity: isMobile || hoveredRow === item.id || rowNoteCount > 0 ? 1 : 0, transition: 'opacity 0.12s', flexShrink: 0 }}>
-                        <NoteAnchor
-                          target={{ type: 'row', key: item.id, label: item.productName }}
-                          count={rowNoteCount}
-                          onOpen={(target, rect) => openNote(target, rect, makeRequestAgent)}
-                        />
-                      </span>
+                      {!readOnly && (
+                        <span style={{ opacity: isMobile || hoveredRow === item.id || rowNoteCount > 0 ? 1 : 0, transition: 'opacity 0.12s', flexShrink: 0 }}>
+                          <NoteAnchor
+                            target={{ type: 'row', key: item.id, label: item.productName }}
+                            count={rowNoteCount}
+                            onOpen={(target, rect) => openNote(target, rect, makeRequestAgent)}
+                          />
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--bran)', whiteSpace: 'nowrap' }}>{item.sku}</div>
                   </td>
@@ -796,8 +845,8 @@ function RecDetail({ rec, isMobile, onNavigate, onPinContext, notesMap, openNote
                     const isActive = activeCell?.sku === item.sku && activeCell?.destino === d.key
                     const val = item[d.key] as number
                     return (
-                      <Td key={d.key} highlight={d.key === 'vendido'} clickable={val > 0} active={isActive}
-                        onClick={val > 0 ? () => handleCellClick(item, d.key as ReconciliationDestino, d.label) : undefined}
+                      <Td key={d.key} highlight={d.key === 'vendido'} clickable={!readOnly && val > 0} active={isActive}
+                        onClick={!readOnly && val > 0 ? () => handleCellClick(item, d.key as ReconciliationDestino, d.label) : undefined}
                       >{val}</Td>
                     )
                   })}
