@@ -1133,7 +1133,7 @@ function CellModal({ cell, onClose, notes = [], onAddNote, onRequestAgent }: {
               placeholder="Añadir nota..."
               style={{
                 width: '100%', padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--r-md)',
-                border: '1px solid var(--line)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+                border: '1px solid var(--line)', fontFamily: 'var(--font-body)', fontSize: '16px',
                 color: 'var(--ink)', resize: 'none', minHeight: '52px',
                 background: 'var(--flour-warm)', boxSizing: 'border-box',
               } as React.CSSProperties}
@@ -1312,7 +1312,7 @@ function NoteSheet({ activeNote, notes, isMobile, onClose, onAdd }: {
             autoFocus
             style={{
               width: '100%', padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--r-md)',
-              border: '1px solid var(--line)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+              border: '1px solid var(--line)', fontFamily: 'var(--font-body)', fontSize: '16px',
               color: 'var(--ink)', resize: 'none', minHeight: '56px',
               background: 'var(--flour-warm)', boxSizing: 'border-box',
             } as React.CSSProperties}
