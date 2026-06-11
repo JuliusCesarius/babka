@@ -153,6 +153,71 @@ export const RECONCILIATIONS: Reconciliation[] = [
   },
 ]
 
+export const RECONCILIATIONS_HISTORY: Reconciliation[] = [
+  // ── 2026-06-07 (domingo) ──────────────────────────────────────────────────
+  {
+    id: 'hrec-001', branchId: 'centro', date: '2026-06-07', status: 'cerrado',
+    totalDiferencia: 0, createdAt: '2026-06-07T08:00:00',
+    closedAt: '2026-06-07T20:38:00', closedBy: 'Diego Alonzo',
+    items: [
+      { id: 'hri-001', productName: 'Babka chocolate',      sku: 'BAB-CHO-01', opening: 18, produced: 28, closing: 2, vendido: 34, traspaso: 4, merma: 4, personal: 2, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+      { id: 'hri-002', productName: 'Focaccia romero',      sku: 'FOC-ROM-01', opening: 0,  produced: 22, closing: 1, vendido: 16, traspaso: 3, merma: 2, personal: 0, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+      { id: 'hri-003', productName: 'Croissant mantequilla',sku: 'CRO-MAN-01', opening: 4,  produced: 38, closing: 3, vendido: 29, traspaso: 4, merma: 4, personal: 2, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+      { id: 'hri-004', productName: 'Sourdough 500g',       sku: 'SRD-500-01', opening: 6,  produced: 18, closing: 1, vendido: 16, traspaso: 0, merma: 1, personal: 2, evento: 4, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+    ],
+  },
+  {
+    id: 'hrec-002', branchId: 'norte', date: '2026-06-07', status: 'cerrado',
+    totalDiferencia: 0, createdAt: '2026-06-07T08:00:00',
+    closedAt: '2026-06-07T21:02:00', closedBy: 'Sofía Ruiz',
+    items: [
+      { id: 'hri-005', productName: 'Babka chocolate',      sku: 'BAB-CHO-01', opening: 14, produced: 30, closing: 2, vendido: 32, traspaso: 5, merma: 3, personal: 2, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+      { id: 'hri-006', productName: 'Croissant mantequilla',sku: 'CRO-MAN-01', opening: 5,  produced: 42, closing: 4, vendido: 35, traspaso: 2, merma: 4, personal: 2, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+      { id: 'hri-007', productName: 'Concha vainilla',      sku: 'CON-VAI-01', opening: 0,  produced: 55, closing: 6, vendido: 44, traspaso: 0, merma: 3, personal: 2, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+    ],
+  },
+  {
+    id: 'hrec-003', branchId: 'montes-ame', date: '2026-06-07', status: 'cerrado',
+    totalDiferencia: 0, createdAt: '2026-06-07T08:00:00',
+    closedAt: '2026-06-07T20:51:00', closedBy: 'Carlos Méndez',
+    items: [
+      { id: 'hri-008', productName: 'Babka chocolate',      sku: 'BAB-CHO-01', opening: 10, produced: 22, closing: 1, vendido: 24, traspaso: 4, merma: 2, personal: 1, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+      { id: 'hri-009', productName: 'Sourdough 500g',       sku: 'SRD-500-01', opening: 3,  produced: 14, closing: 1, vendido: 12, traspaso: 1, merma: 2, personal: 1, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+      { id: 'hri-010', productName: 'Croissant mantequilla',sku: 'CRO-MAN-01', opening: 2,  produced: 28, closing: 2, vendido: 22, traspaso: 0, merma: 4, personal: 2, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+    ],
+  },
+  {
+    id: 'hrec-004', branchId: 'slowfood', date: '2026-06-07', status: 'cerrado',
+    totalDiferencia: 0, createdAt: '2026-06-07T08:00:00',
+    closedAt: '2026-06-07T21:10:00', closedBy: 'Ana Pereira',
+    items: [
+      { id: 'hri-011', productName: 'Sourdough 1kg',        sku: 'SRD-1KG-01', opening: 4, produced: 16, closing: 1, vendido: 14, traspaso: 2, merma: 2, personal: 1, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+      { id: 'hri-012', productName: 'Babka chocolate',      sku: 'BAB-CHO-01', opening: 5, produced: 18, closing: 1, vendido: 17, traspaso: 2, merma: 1, personal: 1, evento: 1, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+      { id: 'hri-013', productName: 'Café de especialidad', sku: 'CAF-ESP-01', opening: 0, produced: 50, closing: 0, vendido: 43, traspaso: 0, merma: 4, personal: 3, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+    ],
+  },
+  // ── 2026-06-06 (sábado) ───────────────────────────────────────────────────
+  {
+    id: 'hrec-005', branchId: 'centro', date: '2026-06-06', status: 'cerrado',
+    totalDiferencia: 0, createdAt: '2026-06-06T08:00:00',
+    closedAt: '2026-06-06T21:20:00', closedBy: 'Diego Alonzo',
+    items: [
+      { id: 'hri-014', productName: 'Babka chocolate',      sku: 'BAB-CHO-01', opening: 16, produced: 32, closing: 3, vendido: 36, traspaso: 5, merma: 2, personal: 2, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+      { id: 'hri-015', productName: 'Croissant mantequilla',sku: 'CRO-MAN-01', opening: 5,  produced: 44, closing: 4, vendido: 34, traspaso: 4, merma: 5, personal: 2, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+      { id: 'hri-016', productName: 'Pain au chocolat',     sku: 'PAI-CHO-01', opening: 0,  produced: 40, closing: 5, vendido: 28, traspaso: 0, merma: 0, personal: 0, evento: 0, muestra: 7, devolucion: 0, diferencia: 0, unit: 'pieza' },
+    ],
+  },
+  {
+    id: 'hrec-006', branchId: 'norte', date: '2026-06-06', status: 'cerrado',
+    totalDiferencia: 0, createdAt: '2026-06-06T08:00:00',
+    closedAt: '2026-06-06T20:55:00', closedBy: 'Sofía Ruiz',
+    items: [
+      { id: 'hri-017', productName: 'Babka chocolate',      sku: 'BAB-CHO-01', opening: 12, produced: 28, closing: 2, vendido: 30, traspaso: 4, merma: 2, personal: 2, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+      { id: 'hri-018', productName: 'Concha vainilla',      sku: 'CON-VAI-01', opening: 0,  produced: 52, closing: 5, vendido: 42, traspaso: 0, merma: 3, personal: 2, evento: 0, muestra: 0, devolucion: 0, diferencia: 0, unit: 'pieza' },
+    ],
+  },
+]
+
 export const HITL_REQUESTS: HITLRequest[] = [
   {
     id: 'hitl-001',
