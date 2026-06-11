@@ -157,6 +157,8 @@ export function Conciliaciones({ initialBranchId, onNavigate, onPinContext }: Co
 
   const handleSelectBranch = (id: BranchId | 'todas') => {
     setSelectedBranchId(id)
+    const params = id !== 'todas' ? `?sucursal=${id}` : ''
+    window.history.replaceState({ page: 'conciliaciones', branchId: id !== 'todas' ? id : undefined }, '', '/conciliaciones' + params)
     if (isMobile && id !== 'todas' && isToday) setMobileShowDetail(true)
     else setMobileShowDetail(false)
   }
